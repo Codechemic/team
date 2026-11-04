@@ -26,6 +26,11 @@ export default function RecipeCard({ r }) {
               <div className="meter"><i style={{ width: `${r.matchRate}%`, background: rateColor(r.matchRate) }} /></div>
               <div className="lack">{r.missing.length ? `부족: ${r.missing.join(', ')}` : '모든 재료가 있어요'}</div>
             </>
+          ) : r.ingredientNames ? (
+            <>
+              {r.matchReason && <div className="reason">{r.matchReason}</div>}
+              <div className="lack">재료: {r.ingredientNames.join(' · ')}</div>
+            </>
           ) : (
             <div className="lack">{r.writer}</div>
           )}

@@ -9,7 +9,7 @@ import { HatI, SearchI } from '../components/Icons.jsx';
 // 1-① 홈 화면
 export default function Home() {
   const nav = useNavigate();
-  const { selected, toggleSelected, setSelected, recent, setRecent, addRecent } = useApp();
+  const { selected, toggleSelected, setSelected, recent, removeRecent, addRecent } = useApp();
   const [hint, setHint] = useState('');
   const recommend = () => {
     if (!selected.length) return setHint('재료를 1개 이상 선택해 주세요');
@@ -20,7 +20,7 @@ export default function Home() {
       <div className="brand brand-home"><span className="hat"><HatI /></span><b>냉장고를 부탁해</b><p>냉장고 속 재료로 맛있는 요리를 찾아보세요!</p></div>
       <button className="search search-home" onClick={() => nav('/search')}><SearchI /><span>어떤 재료가 있나요?</span></button>
       <section className="sec">
-        <div className="sec-h"><h2>최근 검색어</h2>{recent.length > 0 && <button className="link" onClick={() => setRecent([])}>전체 삭제</button>}</div>
+        <div className="sec-h"><h2>최근 검색어</h2>{recent.length > 0 && <button className="link" onClick={() => removeRecent(null)}>전체 삭제</button>}</div>
         {recent.length ? (
           <div className="chips">{recent.map((id) => <IngredientChip key={id} label={api.ingredient(id).name} selected={selected.includes(id)} onClick={() => toggleSelected(id)} />)}</div>
         ) : <div className="empty">아직 검색한 재료가 없어요</div>}

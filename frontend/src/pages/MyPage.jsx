@@ -8,7 +8,7 @@ import { ChevI, HeartI, PlusI, SearchI, UserI } from '../components/Icons.jsx';
 // 4 마이페이지
 export default function MyPage() {
   const nav = useNavigate();
-  const { user, favorites, following, recent, setRecent, toast } = useApp();
+  const { user, favorites, following, recent, removeRecent, toast } = useApp();
   const [profile, setProfile] = useState(null);
   const [mine, setMine] = useState([]);
   const [open, setOpen] = useState('');
@@ -40,7 +40,7 @@ export default function MyPage() {
         {open === 'recent' && (
           <div className="sec">
             <div className="chips">{recent.map((id) => <span key={id} className="chip">{api.ingredient(id).name}</span>)}</div>
-            {recent.length > 0 && <button className="link" onClick={() => setRecent([])}>최근 검색어 전체 삭제</button>}
+            {recent.length > 0 && <button className="link" onClick={() => removeRecent(null)}>최근 검색어 전체 삭제</button>}
           </div>
         )}
       </main>

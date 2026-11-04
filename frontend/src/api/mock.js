@@ -55,7 +55,31 @@ function detail(r) {
   };
 }
 
+// 레시피 검색: 이름 일치 → 재료(별칭 포함) 일치 순, 같은 순위면 평점·조회수
+function searchRecipesSync(q) {
+  const k = q.trim().replace(/\s+/g, '');
+  if (!k) return [];
+  const ingIds = new Set(searchIngredientsSync(k).filter((i) => i.score <= 3).map((i) => i.id));
+  const out = [];
+  for (const r of allRecipes()) {
+    const nameHit = r.title.replace(/\s+/g, '').includes(k);
+    const hits = r.ingredients.filter((x) => ingIds.has(x.ingredientId)).map((x) => byId[x.ingredientId].name);
+    if (!nameHit && !hits.length) continue;
+    out.push({ ...card(r), rank: nameHit ? 0 : 1, matchReason: nameHit ? '이름 일치' : `재료 포함: ${hits.join(', ')}` });
+  }
+  return out.sort((a, b) => a.rank - b.rank || b.averageRating - a.averageRating || b.views - a.views);
+}
+function card(r) {
+  return {
+    recipeId: r.id, title: r.title, emoji: r.emoji, mainPhoto: r.mainPhoto || null, cookingTime: r.cookingTime,
+    difficulty: r.difficulty, averageRating: r.averageRating, views: r.views, writer: r.writer,
+    ingredientNames: r.ingredients.filter((x) => !byId[x.ingredientId]?.isSeasoning).map((x) => byId[x.ingredientId].name),
+  };
+}
+
 export const mock = {
+  searchRecipes: (q) => wait(searchRecipesSync(q)),
+  popularRecipes: () => wait(allRecipes().map(card).sort((a, b) => b.views - a.views).slice(0, 6)),
   ingredient: (id) => byId[id],
   searchIngredients: (q, category) => wait(searchIngredientsSync(q, category)),
   recommend: (ingredientIds, sort) => wait(recommendSync(ingredientIds, sort)),

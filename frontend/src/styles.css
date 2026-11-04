@@ -176,3 +176,9 @@ nav.tabs a.on { color: var(--accent); font-weight: 700; }
 .sheet h3 { margin: 0; font-size: 17px; }
 .radio { display: flex; align-items: center; gap: 10px; padding: 10px 12px; border: 1px solid var(--line); border-radius: 10px; cursor: pointer; }
 .radio:has(input:checked) { border-color: var(--accent); background: var(--accent-soft); }
+
+/* 검색 화면 상단 전환 (레시피 검색 / 재료 담기) */
+.seg { display: grid; grid-template-columns: 1fr 1fr; padding: 4px; border-radius: 12px; background: var(--surface-2); border: 1px solid var(--line); }
+.seg button { height: 38px; border-radius: 9px; font-size: 14.5px; color: var(--muted); font-weight: 500; }
+.seg button[aria-selected="true"] { background: var(--surface); color: var(--accent); font-weight: 700; box-shadow: 0 1px 3px rgba(60, 30, 10, .12); }
+.reason { font-size: 12.5px; font-weight: 700; color: var(--accent); }

@@ -43,6 +43,39 @@ const RecipeService = {
     const rows = must(await sb.rpc('recommend_recipes', { ingredient_ids: ingredientIds, sort }));
     return rows.map((r) => ({ ...toCard(r), matchRate: r.match_rate, matchedCount: r.matched_count, missing: r.missing }));
   },
+  // 레시피 검색: 이름 일치 + 재료(별칭 포함) 일치
+  async searchRecipes(q) {
+    if (!USE_SUPABASE) return mock.searchRecipes(q);
+    const k = q.trim();
+    const sel = 'recipe_id, title, emoji, main_photo, cooking_time, difficulty, average_rating, views, profiles(nickname), recipe_ingredient(ingredient_id, ingredient(name, is_seasoning))';
+    // 재료는 이름·별칭이 검색어로 시작하는 것만 (예: '파' → 대파 O, 양파 X)
+    const kk = k.replace(/\s+/g, '');
+    const ings = (await IngredientService.searchIngredients(kk, '')).filter((i) => i.name.startsWith(kk) || i.matchedAlias?.startsWith(kk)).slice(0, 5);
+    const ingIds = ings.map((i) => i.id);
+    const [byName, byIngRows] = await Promise.all([
+      sb.from('recipe').select(sel).ilike('title', `%${k.replace(/[%_]/g, '')}%`).limit(30).then(must),
+      ingIds.length ? sb.from('recipe_ingredient').select('recipe_id').in('ingredient_id', ingIds).limit(200).then(must) : [],
+    ]);
+    const nameIds = new Set(byName.map((r) => r.recipe_id));
+    const extraIds = [...new Set(byIngRows.map((r) => r.recipe_id))].filter((id) => !nameIds.has(id));
+    const byIng = extraIds.length ? must(await sb.from('recipe').select(sel).in('recipe_id', extraIds)) : [];
+    const names = Object.fromEntries(ings.map((i) => [i.id, i.name]));
+    const toResult = (r, nameHit) => ({
+      ...toCard(r), views: r.views,
+      ingredientNames: r.recipe_ingredient.filter((x) => !x.ingredient.is_seasoning).map((x) => x.ingredient.name),
+      matchReason: nameHit ? '이름 일치' : `재료 포함: ${r.recipe_ingredient.filter((x) => names[x.ingredient_id]).map((x) => x.ingredient.name).join(', ')}`,
+      rank: nameHit ? 0 : 1,
+    });
+    return [...byName.map((r) => toResult(r, true)), ...byIng.map((r) => toResult(r, false))]
+      .sort((a, b) => a.rank - b.rank || b.averageRating - a.averageRating || b.views - a.views);
+  },
+  async popularRecipes() {
+    if (!USE_SUPABASE) return mock.popularRecipes();
+    const rows = must(await sb.from('recipe')
+      .select('recipe_id, title, emoji, main_photo, cooking_time, difficulty, average_rating, views, profiles(nickname), recipe_ingredient(ingredient_id, ingredient(name, is_seasoning))')
+      .order('views', { ascending: false }).limit(6));
+    return rows.map((r) => ({ ...toCard(r), ingredientNames: r.recipe_ingredient.filter((x) => !x.ingredient.is_seasoning).map((x) => x.ingredient.name) }));
+  },
   async getRecipe(id) {
     if (!USE_SUPABASE) return mock.getRecipe(id);
     return must(await sb.rpc('get_recipe', { p_recipe_id: Number(id) }));
@@ -111,6 +144,31 @@ const ReportService = {
   },
 };
 
+/* ---------------- RecentSearchService (UC-B03 최근 검색어) ---------------- */
+// 로그인 상태면 recent_search 테이블에 재료 ID로 저장, 아니면 이 기기에만 저장(store.jsx)
+const RECENT_MAX = 8;
+const RecentSearchService = {
+  async recentIds() {
+    const user = await UserService.currentUser();
+    if (!USE_SUPABASE || !user) return null;
+    const rows = must(await sb.from('recent_search').select('ingredient_id').order('searched_at', { ascending: false }).limit(40));
+    return [...new Set(rows.map((r) => r.ingredient_id))].slice(0, RECENT_MAX);
+  },
+  async addRecent(ids) {
+    const user = await UserService.currentUser();
+    if (!USE_SUPABASE || !user || !ids.length) return;
+    must(await sb.from('recent_search').delete().eq('user_id', user.id).in('ingredient_id', ids));   // 같은 재료는 최신 1개만
+    must(await sb.from('recent_search').insert(ids.map((id) => ({ user_id: user.id, ingredient_id: id }))));
+  },
+  async removeRecent(id) {
+    const user = await UserService.currentUser();
+    if (!USE_SUPABASE || !user) return;
+    let q = sb.from('recent_search').delete().eq('user_id', user.id);
+    if (id != null) q = q.eq('ingredient_id', id);   // id 없으면 전체 삭제
+    must(await q);
+  },
+};
+
 /* ---------------- UserService (Supabase Auth) ---------------- */
 const UserService = {
   async currentUser() {
@@ -140,6 +198,6 @@ const UserService = {
 };
 
 export const api = {
-  ...IngredientService, ...RecipeService, ...InteractionService, ...ReportService,
+  ...IngredientService, ...RecipeService, ...InteractionService, ...ReportService, ...RecentSearchService,
   user: UserService, usingSupabase: USE_SUPABASE,
 };

@@ -31,13 +31,23 @@ export function AppProvider({ children }) {
   }, []);
   useEffect(() => {
     if (!api.usingSupabase) return;
-    if (user) api.favoriteIds().then((ids) => ids && setFavorites(ids)).catch(() => {});
-    else setFavorites([]);
+    if (user) {
+      api.favoriteIds().then((ids) => ids && setFavorites(ids)).catch(() => {});
+      api.recentIds().then((ids) => ids && setRecent(ids)).catch(() => {});
+    } else setFavorites([]);
   }, [user]);
 
   const needLogin = (what) => { if (api.usingSupabase && !user) { toast(`로그인하면 ${what}할 수 있어요`); return true; } return false; };
   const toggleSelected = (id) => setSelected((s) => (s.includes(id) ? s.filter((x) => x !== id) : [...s, id]));
-  const addRecent = (ids) => setRecent((r) => [...ids, ...r.filter((x) => !ids.includes(x))].slice(0, 8));
+  // 최근 검색어 (UC-B03): 최신이 앞, 같은 재료는 하나만, 최대 8개
+  const addRecent = (ids) => {
+    setRecent((r) => [...ids, ...r.filter((x) => !ids.includes(x))].slice(0, 8));
+    api.addRecent(ids).catch(() => {});
+  };
+  const removeRecent = (id) => {
+    setRecent((r) => (id == null ? [] : r.filter((x) => x !== id)));
+    api.removeRecent(id).catch(() => {});
+  };
 
   const toggleFavorite = async (id) => {
     if (needLogin('찜')) return;
@@ -55,7 +65,7 @@ export function AppProvider({ children }) {
   };
 
   return (
-    <Ctx.Provider value={{ ready, user, needLogin, selected, setSelected, toggleSelected, recent, setRecent, addRecent, favorites, toggleFavorite, following, toggleFollow, toastMsg, toast }}>
+    <Ctx.Provider value={{ ready, user, needLogin, selected, setSelected, toggleSelected, recent, setRecent, addRecent, removeRecent, favorites, toggleFavorite, following, toggleFollow, toastMsg, toast }}>
       {children}
     </Ctx.Provider>
   );
