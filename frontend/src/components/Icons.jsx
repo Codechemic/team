@@ -1,0 +1,14 @@
+const s = { fill: 'none', stroke: 'currentColor', strokeWidth: 2, strokeLinecap: 'round', strokeLinejoin: 'round' };
+export const Back = () => <svg viewBox="0 0 24 24" {...s}><path d="M15 18l-6-6 6-6" /></svg>;
+export const SearchI = () => <svg viewBox="0 0 24 24" {...s}><circle cx="11" cy="11" r="7" /><path d="M20 20l-3.5-3.5" /></svg>;
+export const HomeI = () => <svg viewBox="0 0 24 24" {...s}><path d="M3 11l9-7 9 7v9a1 1 0 0 1-1 1h-5v-6h-6v6H4a1 1 0 0 1-1-1z" /></svg>;
+export const PlusI = () => <svg viewBox="0 0 24 24" {...s}><rect x="3" y="3" width="18" height="18" rx="5" /><path d="M12 8v8M8 12h8" /></svg>;
+export const HeartI = ({ filled }) => <svg viewBox="0 0 24 24" {...s} fill={filled ? 'currentColor' : 'none'}><path d="M12 20s-7-4.4-7-10a4 4 0 0 1 7-2.6A4 4 0 0 1 19 10c0 5.6-7 10-7 10z" /></svg>;
+export const UserI = () => <svg viewBox="0 0 24 24" {...s}><circle cx="12" cy="8" r="4" /><path d="M4 21c1.5-4 4.5-6 8-6s6.5 2 8 6" /></svg>;
+export const ShareI = () => <svg viewBox="0 0 24 24" {...s}><path d="M12 3v12M7 8l5-5 5 5M5 14v5a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-5" /></svg>;
+export const FlagI = () => <svg viewBox="0 0 24 24" {...s}><path d="M5 21V4M5 4h11l-2 4 2 4H5" /></svg>;
+export const CamI = () => <svg viewBox="0 0 24 24" {...s}><path d="M4 8h3l2-3h6l2 3h3v11H4z" /><circle cx="12" cy="13" r="3.5" /></svg>;
+export const CheckI = () => <svg viewBox="0 0 24 24" {...s} strokeWidth="3"><path d="M5 12.5l4.5 4.5L19 7.5" /></svg>;
+export const ChevI = () => <svg viewBox="0 0 24 24" {...s}><path d="M9 6l6 6-6 6" /></svg>;
+export const ClockI = () => <svg viewBox="0 0 24 24" width="13" height="13" {...s}><circle cx="12" cy="12" r="9" /><path d="M12 7v5l3 2" /></svg>;
+export const HatI = () => <svg viewBox="0 0 48 48" {...s} strokeWidth="3"><path d="M14 30c-5 0-8-3.6-8-8a8 8 0 0 1 9.5-7.9A10 10 0 0 1 24 9a10 10 0 0 1 8.5 5.1A8 8 0 0 1 42 22c0 4.4-3 8-8 8" /><path d="M14 26v13h20V26M14 34h20" /></svg>;
