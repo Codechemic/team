@@ -10,12 +10,6 @@ import './styles.css';
   document.addEventListener(t, (e) => e.preventDefault(), { passive: false })
 );
 document.addEventListener('touchmove', (e) => { if (e.touches.length > 1) e.preventDefault(); }, { passive: false });
-let lastTouchEnd = 0;
-document.addEventListener('touchend', (e) => {
-  const now = Date.now();
-  if (now - lastTouchEnd <= 300 && !e.target.closest('input, textarea, select')) e.preventDefault(); // 더블탭 확대 방지
-  lastTouchEnd = now;
-}, { passive: false });
 
 ReactDOM.createRoot(document.getElementById('root')).render(
   <React.StrictMode>
