@@ -5,6 +5,18 @@ import App from './App.jsx';
 import { AppProvider } from './store.jsx';
 import './styles.css';
 
+// 핀치 확대 방지 (iOS Safari는 user-scalable=no를 무시하므로 제스처를 직접 막음)
+['gesturestart', 'gesturechange', 'gestureend'].forEach((t) =>
+  document.addEventListener(t, (e) => e.preventDefault(), { passive: false })
+);
+document.addEventListener('touchmove', (e) => { if (e.touches.length > 1) e.preventDefault(); }, { passive: false });
+let lastTouchEnd = 0;
+document.addEventListener('touchend', (e) => {
+  const now = Date.now();
+  if (now - lastTouchEnd <= 300 && !e.target.closest('input, textarea, select')) e.preventDefault(); // 더블탭 확대 방지
+  lastTouchEnd = now;
+}, { passive: false });
+
 ReactDOM.createRoot(document.getElementById('root')).render(
   <React.StrictMode>
     <BrowserRouter>
