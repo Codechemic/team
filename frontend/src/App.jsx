@@ -12,6 +12,7 @@ import Favorites from './pages/Favorites.jsx';
 import MyPage from './pages/MyPage.jsx';
 import Login from './pages/Login.jsx';
 import Settings from './pages/Settings.jsx';
+import Account from './pages/Account.jsx';
 
 // 화면 번호는 UI/UX 화면 흐름도 기준
 export default function App() {
@@ -29,6 +30,7 @@ export default function App() {
         <Route path="/my" element={<MyPage />} />                   {/* 4 마이페이지 */}
         <Route path="/login" element={<Login />} />                {/* UC-A01·A02 회원가입·로그인 */}
         <Route path="/settings" element={<Settings />} />          {/* 설정: 내 냉장고 */}
+        <Route path="/account" element={<Account />} />            {/* 계정 설정 */}
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
       <BottomTab />

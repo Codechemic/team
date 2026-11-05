@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { api } from '../api/index.js';
+import { IngPic } from '../components/Pic.jsx';
 import { useApp } from '../store.jsx';
 import Header from '../components/Header.jsx';
 import PrimaryButton from '../components/PrimaryButton.jsx';
@@ -95,11 +96,11 @@ export default function Register() {
             <div className="notice small">재료는 표준 재료 목록에서 골라야 추천에 연결돼요. '파'를 검색하면 '대파'로 등록돼요.</div>
             <label className="search"><SearchI /><input value={q} onChange={(e) => setQ(e.target.value)} placeholder="재료 이름 검색" /></label>
             {q.trim() && (sugg.length ? (
-              <div className="sugg">{sugg.map((i) => <button key={i.id} onClick={() => addIng(i)}><span className="e">{i.emoji}</span><span>{i.matchedAlias && `${i.matchedAlias} → `}<b>{i.name}</b></span></button>)}</div>
+              <div className="sugg">{sugg.map((i) => <button key={i.id} onClick={() => addIng(i)}><IngPic name={i.name} emoji={i.emoji} className="e" /><span>{i.matchedAlias && `${i.matchedAlias} → `}<b>{i.name}</b></span></button>)}</div>
             ) : <div className="notice warn">등록되지 않은 재료예요. 관리자에게 추가를 요청할 수 있어요.</div>)}
             {f.ingredients.length ? f.ingredients.map((x, k) => (
               <div key={x.ingredientId} className="ing">
-                <span className="e">{x.emoji}</span><span className="n">{x.name}</span>
+                <IngPic name={x.name} emoji={x.emoji} className="e" /><span className="n">{x.name}</span>
                 <span className="qty">
                   <input type="number" min="0" step="0.5" value={x.quantity} onChange={(e) => updIng(k, 'quantity', +e.target.value)} aria-label={`${x.name} 분량`} />
                   <select value={x.unit} onChange={(e) => updIng(k, 'unit', e.target.value)} aria-label="단위">{UNITS.map((u) => <option key={u}>{u}</option>)}</select>

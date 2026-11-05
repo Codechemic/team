@@ -30,26 +30,32 @@ export default function Cook() {
   const [r, setR] = useState(null);
   const [done, setDone] = useState([]);
   useEffect(() => { api.getRecipe(id).then(setR); }, [id]);
-  if (!r) return null;
+  if (!r) return <><Header title="조리 방법" /><main className="page"><div className="sk" style={{ height: 120 }} /><div className="sk" style={{ height: 120 }} /></main></>;
   const toggle = (i) => setDone((d) => (d.includes(i) ? d.filter((x) => x !== i) : [...d, i]));
+  const pct = Math.round((done.length / r.steps.length) * 100);
+  const cur = r.steps.findIndex((_, i) => !done.includes(i));
   return (
     <>
-      <Header title="조리 방법" />
+      <Header title={r.title} />
+      <div className="cook-bar"><div className="cook-prog"><i style={{ width: `${pct}%` }} /></div><span>{done.length}/{r.steps.length} 단계</span></div>
       <main className="page">
-        <div className="sec-h"><h2>{r.title} · {r.steps.length}단계</h2><span className="muted small">{done.length}/{r.steps.length} 완료</span></div>
         <div className="steps">
           {r.steps.map((s, i) => (
-            <div key={i} className={`step${done.includes(i) ? ' done' : ''}`}>
-              <span className="num">{s.stepNumber}</span>
+            <div key={i} className={`step${done.includes(i) ? ' done' : ''}${i === cur ? ' now' : ''}`}>
+              <button className="num" onClick={() => toggle(i)} aria-label={`${s.stepNumber}단계 ${done.includes(i) ? '완료 취소' : '완료'}`}>{done.includes(i) ? '✓' : s.stepNumber}</button>
               <div className="tx">
+                {i === cur && <span className="now-tag">지금 할 단계</span>}
                 <p>{s.description}</p>
-                {s.timerSeconds && <Timer seconds={s.timerSeconds} label={s.stepNumber} onDone={(n) => toast(`${n}단계 타이머가 끝났어요`)} />}
-                <button className="check" onClick={() => toggle(i)}>{done.includes(i) ? '다시 하기' : '이 단계 완료'}</button>
+                <div className="step-act">
+                  {s.timerSeconds && <Timer seconds={s.timerSeconds} label={s.stepNumber} onDone={(n) => toast(`${n}단계 타이머가 끝났어요`)} />}
+                  <button className="check" onClick={() => toggle(i)}>{done.includes(i) ? '다시 하기' : '완료'}</button>
+                </div>
               </div>
             </div>
           ))}
         </div>
-        <PrimaryButton onClick={() => { toast('맛있게 드세요!'); nav(-1); }}>완료</PrimaryButton>
+        {r.tip && <div className="tipbox"><b>💡 요리 팁</b><p>{r.tip}</p></div>}
+        <PrimaryButton onClick={() => { toast(pct === 100 ? '완성! 맛있게 드세요 🍽️' : '맛있게 드세요!'); nav(-1); }}>{pct === 100 ? '요리 완성!' : '요리 마치기'}</PrimaryButton>
       </main>
     </>
   );

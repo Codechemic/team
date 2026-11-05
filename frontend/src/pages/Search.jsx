@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
+import { IngPic } from '../components/Pic.jsx';
 import { useApp } from '../store.jsx';
 import { api } from '../api/index.js';
 import Header from '../components/Header.jsx';
@@ -104,7 +105,7 @@ function IngredientSearch() {
               <div className="list">
                 {list.map((i) => { const on = selected.includes(i.id); return (
                   <div key={i.id} className="irow">
-                    <div className="ico">{i.emoji}</div>
+                    <IngPic name={i.name} emoji={i.emoji} className="ico" />
                     <div className="nm">{i.matchedAlias && <small>{i.matchedAlias} →</small>}<b>{i.name}</b>{!i.matchedAlias && <small>{i.category}</small>}</div>
                     <button className={`plus${on ? ' on' : ''}`} onClick={() => pick(i)} aria-label={`${i.name} ${on ? '빼기' : '추가'}`}>{on ? '✓' : '+'}</button>
                   </div>

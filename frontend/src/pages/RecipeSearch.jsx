@@ -29,7 +29,7 @@ export default function RecipeSearch() {
         </section>
       ) : list.length ? (
         <section className="sec">
-          <div className="sec-h"><h2>검색 결과 ({list.length})</h2></div>
+          <div className="sec-h"><h2>검색 결과 <span className="count">{list.length}</span></h2></div>
           {list.map((r) => <RecipeCard key={r.recipeId} r={r} />)}
         </section>
       ) : (

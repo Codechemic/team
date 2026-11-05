@@ -195,9 +195,49 @@ const UserService = {
     if (error) throw new Error('이메일 또는 비밀번호가 맞지 않아요');
   },
   async signOut() { await sb.auth.signOut(); },
+  // 계정 설정
+  async updateNickname(nickname) {
+    const n = nickname.trim();
+    if (n.length < 2 || n.length > 12) throw new Error('닉네임은 2~12자로 정해 주세요');
+    const user = await UserService.currentUser();
+    if (!user) throw new Error('로그인이 필요해요');
+    const { error } = await sb.from('profiles').update({ nickname: n }).eq('id', user.id);
+    if (error?.code === '23505') throw new Error('이미 사용 중인 닉네임이에요');
+    if (error) throw new Error(friendly(error));
+    return n;
+  },
+  async changePassword(current, next) {
+    if (next.length < 6) throw new Error('새 비밀번호는 6자 이상이어야 해요');
+    const user = await UserService.currentUser();
+    if (!user) throw new Error('로그인이 필요해요');
+    const { error: e1 } = await sb.auth.signInWithPassword({ email: user.email, password: current });
+    if (e1) throw new Error('현재 비밀번호가 맞지 않아요');
+    const { error } = await sb.auth.updateUser({ password: next });
+    if (error) throw new Error(/different/.test(error.message) ? '지금과 다른 비밀번호를 입력해 주세요' : error.message);
+  },
+  async deleteAccount() {
+    must(await sb.rpc('delete_my_account'));
+    await sb.auth.signOut();
+  },
+};
+
+/* ---------------- PreferenceService (설정 > 내 냉장고) ---------------- */
+const PreferenceService = {
+  async fridgeModel() {
+    const user = await UserService.currentUser();
+    if (!USE_SUPABASE || !user) return undefined;
+    const { data, error } = await sb.from('user_preference').select('fridge_model').eq('user_id', user.id).maybeSingle();
+    if (error) return undefined;   // 05 SQL 실행 전이면 이 기기 값만 사용
+    return data?.fridge_model ?? null;
+  },
+  async saveFridgeModel(model) {
+    const user = await UserService.currentUser();
+    if (!USE_SUPABASE || !user) return;
+    await sb.from('user_preference').upsert({ user_id: user.id, fridge_model: model, updated_at: new Date().toISOString() });
+  },
 };
 
 export const api = {
-  ...IngredientService, ...RecipeService, ...InteractionService, ...ReportService, ...RecentSearchService,
+  ...IngredientService, ...RecipeService, ...InteractionService, ...ReportService, ...RecentSearchService, ...PreferenceService,
   user: UserService, usingSupabase: USE_SUPABASE,
 };

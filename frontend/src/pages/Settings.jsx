@@ -25,7 +25,7 @@ export default function Settings() {
           {FRIDGES[brand].map((f) => {
             const on = fridge === f.id;
             return (
-              <button key={f.id} className={'fridge' + (on ? ' on' : '')} onClick={() => pick(f)} aria-pressed={on}>
+              <button key={f.id} className={'fcard' + (on ? ' on' : '')} onClick={() => pick(f)} aria-pressed={on}>
                 <div className="fz">{f.size}</div>
                 <div className="fi">
                   <b>{f.type}</b>

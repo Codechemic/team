@@ -4,6 +4,7 @@ import { useApp } from '../store.jsx';
 import { api } from '../api/index.js';
 import Header from '../components/Header.jsx';
 import PrimaryButton from '../components/PrimaryButton.jsx';
+import { FoodPic, IngPic } from '../components/Pic.jsx';
 import { ClockI, FlagI, HeartI, ShareI } from '../components/Icons.jsx';
 
 const FR = { 0.2: '1/5', 0.25: '1/4', 0.3: '1/3', 0.33: '1/3', 0.5: '1/2', 0.67: '2/3', 0.75: '3/4' };
@@ -26,7 +27,7 @@ export default function RecipeDetail() {
   const [reporting, setReporting] = useState(false);
   const [reason, setReason] = useState('부적절한 내용');
   useEffect(() => { api.getRecipe(id).then((d) => { setR(d); setServ(d.servings); }).catch((e) => toast(e.message)); }, [id]);
-  if (!r) return <><Header title="" /><main className="page"><div className="empty">불러오는 중…</div></main></>;
+  if (!r) return <><Header title="" /><main className="page"><div className="sk sk-hero" /><div className="sk" style={{ height: 26, width: '55%' }} /><div className="sk" style={{ height: 70 }} /><div className="sk" style={{ height: 180 }} /></main></>;
   const fav = favorites.includes(r.recipeId), fol = following.includes(r.writerId || r.writer);
   const mine = r.writer === '나' || (user && user.id === r.writerId);
   const share = () => navigator.clipboard?.writeText(`${r.title} 레시피 · 냉장고를 부탁해`).then(() => toast('레시피 이름을 복사했어요')).catch(() => toast('복사할 수 없는 환경이에요'));
@@ -38,16 +39,22 @@ export default function RecipeDetail() {
   return (
     <>
       <Header title="" right={<button className="iconbtn" style={{ color: fav ? 'var(--heart)' : undefined }} onClick={() => toggleFavorite(r.recipeId)} aria-label="찜하기"><HeartI filled={fav} /></button>} />
-      <main className="page">
-        <div className="hero">{r.mainPhoto ? <img src={r.mainPhoto} alt="" /> : r.emoji}</div>
-        <section className="sec">
+      <main className="page detail">
+        <FoodPic r={r} size="lg" extras={r.mainPhoto ? [] : r.ingredients.filter((x) => !x.isSeasoning && x.name !== r.title)} />
+        <section className="sec title-sec">
+          {r.category && <span className="cat">{r.category}</span>}
           <h2 className="title-lg">{r.title}</h2>
-          <div className="meta"><span><ClockI /> {r.cookingTime}분</span><span>{r.difficulty}</span><span>조회 {r.views.toLocaleString()}</span><span>★ {Number(r.averageRating).toFixed(1)}</span></div>
-          {r.intro && <p className="muted">{r.intro}</p>}
+          {r.intro && <p className="intro">{r.intro}</p>}
+          <div className="facts">
+            <div><ClockI /><b>{r.cookingTime}분</b><span>조리시간</span></div>
+            <div><span className="fi-ic">🔥</span><b>{r.difficulty}</b><span>난이도</span></div>
+            <div><span className="fi-ic">★</span><b>{Number(r.averageRating).toFixed(1)}</b><span>평점</span></div>
+            <div><span className="fi-ic">👀</span><b>{r.views.toLocaleString()}</b><span>조회</span></div>
+          </div>
         </section>
         <div className="author">
           <div className="avatar">👩‍🍳</div>
-          <div className="who"><b>{r.writer}</b></div>
+          <div className="who"><b>{r.writer}</b><span className="muted small">레시피 작성자</span></div>
           {!mine && <button className={`follow${fol ? ' on' : ''}`} onClick={() => toggleFollow(r.writer, r.writerId)}>{fol ? '팔로잉' : '팔로우'}</button>}
         </div>
         <div className="actions">
@@ -64,17 +71,27 @@ export default function RecipeDetail() {
               <button onClick={() => setServ((s) => Math.min(10, s + 1))} aria-label="인분 늘리기">+</button>
             </div>
           </div>
-          <div>
-            {r.ingredients.map((x) => (
-              <div key={x.ingredientId} className="ing">
-                <span className="e">{x.emoji}</span>
-                <span className="n">{x.name} {x.isSeasoning ? <span className="muted small">양념</span> : <span className={`tag ${selected.includes(x.ingredientId) ? 'have' : 'need'}`}>{selected.includes(x.ingredientId) ? '보유' : '부족'}</span>}</span>
-                <span className="a">{scaled(x.quantity, x.unit, serv, r.servings)}</span>
-              </div>
-            ))}
-          </div>
+          {[['주재료', r.ingredients.filter((x) => !x.isSeasoning)], ['양념', r.ingredients.filter((x) => x.isSeasoning)]].map(([label, list]) => list.length > 0 && (
+            <div key={label} className="ing-group">
+              <div className="ing-label">{label}{label === '주재료' && <span className="muted small"> · 보유 {list.filter((x) => selected.includes(x.ingredientId)).length}/{list.length}</span>}</div>
+              {list.map((x) => (
+                <div key={x.ingredientId} className="ing">
+                  <IngPic name={x.name} emoji={x.emoji} className="e" />
+                  <span className="n">{x.name}{!x.isSeasoning && <span className={`tag ${selected.includes(x.ingredientId) ? 'have' : 'need'}`}>{selected.includes(x.ingredientId) ? '보유' : '부족'}</span>}</span>
+                  <span className="a">{scaled(x.quantity, x.unit, serv, r.servings)}</span>
+                </div>
+              ))}
+            </div>
+          ))}
         </section>
-        <PrimaryButton onClick={() => nav(`/recipes/${r.recipeId}/cook`)}>조리 방법 보기</PrimaryButton>
+        {r.tip && <div className="tipbox"><b>💡 요리 팁</b><p>{r.tip}</p></div>}
+        <section className="sec">
+          <div className="sec-h"><h2>조리 순서 <span className="count">{r.steps.length}</span></h2></div>
+          <ol className="preview">
+            {r.steps.map((s) => <li key={s.stepNumber}><span className="num">{s.stepNumber}</span><p>{s.description}</p></li>)}
+          </ol>
+        </section>
+        <div className="sticky-cta"><PrimaryButton onClick={() => nav(`/recipes/${r.recipeId}/cook`)}>요리 시작하기</PrimaryButton></div>
       </main>
       {reporting && (
         <div className="scrim" onClick={(e) => e.target === e.currentTarget && setReporting(false)}>

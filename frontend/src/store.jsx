@@ -19,7 +19,9 @@ export function AppProvider({ children }) {
   const [recent, setRecent] = usePersist('recent', [16, 1, 4, 19]);
   const [favorites, setFavorites] = usePersist('favorites', api.usingSupabase ? [] : [4, 3]);
   const [following, setFollowing] = usePersist('following', []);
-  const [fridge, setFridge] = usePersist('fridge', null); // 설정 > 내 냉장고 (모델 코드)
+  const [fridge, setFridgeLocal] = usePersist('fridge', null); // 설정 > 내 냉장고 (모델 코드)
+  const fridgeRef = useRef(fridge); fridgeRef.current = fridge;
+  const setFridge = (model) => { setFridgeLocal(model); api.saveFridgeModel(model).catch(() => {}); };
   const [toastMsg, setToastMsg] = useState('');
   const timer = useRef();
   const toast = (m) => { setToastMsg(m); clearTimeout(timer.current); timer.current = setTimeout(() => setToastMsg(''), 2200); };
@@ -35,6 +37,7 @@ export function AppProvider({ children }) {
     if (user) {
       api.favoriteIds().then((ids) => ids && setFavorites(ids)).catch(() => {});
       api.recentIds().then((ids) => ids && setRecent(ids)).catch(() => {});
+      api.fridgeModel().then((m) => m !== undefined && (m ? setFridgeLocal(m) : fridgeRef.current && api.saveFridgeModel(fridgeRef.current))).catch(() => {});
     } else setFavorites([]);
   }, [user]);
 

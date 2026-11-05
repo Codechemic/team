@@ -48,7 +48,7 @@ function recommendSync(ingredientIds, sort = 'rec') {
 
 function detail(r) {
   return {
-    recipeId: r.id, title: r.title, intro: r.intro, emoji: r.emoji, mainPhoto: r.mainPhoto || null, cookingTime: r.cookingTime,
+    recipeId: r.id, title: r.title, intro: r.intro, tip: r.tip || null, category: r.category || null, emoji: r.emoji, mainPhoto: r.mainPhoto || null, cookingTime: r.cookingTime,
     difficulty: r.difficulty, servings: r.servings, views: r.views, averageRating: r.averageRating, writer: r.writer,
     ingredients: r.ingredients.map((x) => ({ ...x, name: byId[x.ingredientId].name, emoji: byId[x.ingredientId].emoji, isSeasoning: byId[x.ingredientId].isSeasoning })),
     steps: r.steps,
