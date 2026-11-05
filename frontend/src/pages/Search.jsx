@@ -102,13 +102,14 @@ function IngredientSearch() {
               </div>
             )}
             {list.length ? (
-              <div className="list">
+              <div className="tiles">
                 {list.map((i) => { const on = selected.includes(i.id); return (
-                  <div key={i.id} className="irow">
-                    <IngPic name={i.name} emoji={i.emoji} className="ico" />
-                    <div className="nm">{i.matchedAlias && <small>{i.matchedAlias} →</small>}<b>{i.name}</b>{!i.matchedAlias && <small>{i.category}</small>}</div>
-                    <button className={`plus${on ? ' on' : ''}`} onClick={() => pick(i)} aria-label={`${i.name} ${on ? '빼기' : '추가'}`}>{on ? '✓' : '+'}</button>
-                  </div>
+                  <button key={i.id} className={`tile itile${on ? ' on' : ''}`} onClick={() => pick(i)} aria-pressed={on} aria-label={`${i.name} ${on ? '빼기' : '담기'}`}>
+                    <IngPic name={i.name} emoji={i.emoji} className="tile-pic" />
+                    <span className={`tick${on ? ' on' : ''}`}>{on ? '✓' : '+'}</span>
+                    <b>{i.name}</b>
+                    <span>{i.matchedAlias ? `'${i.matchedAlias}'로 찾음` : i.category}</span>
+                  </button>
                 ); })}
               </div>
             ) : <div className="notice warn">'{q}'은(는) 등록되지 않은 재료예요. 다른 이름으로 검색해 보세요.</div>}

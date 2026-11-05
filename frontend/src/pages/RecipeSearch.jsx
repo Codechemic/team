@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { api } from '../api/index.js';
-import RecipeCard from '../components/RecipeCard.jsx';
+import RecipeTile from '../components/RecipeTile.jsx';
 import { SearchI } from '../components/Icons.jsx';
 
 // 레시피 검색: 요리 이름 또는 들어간 재료(별칭 포함)로 찾기
@@ -21,16 +21,16 @@ export default function RecipeSearch() {
 
   return (
     <>
-      <label className="search"><SearchI /><input value={q} onChange={(e) => setQ(e.target.value)} placeholder="요리 이름이나 재료 (예: 김치볶음밥, 감자)" autoFocus /></label>
+      <label className="search"><SearchI /><input value={q} onChange={(e) => setQ(e.target.value)} placeholder="요리 이름이나 재료로 검색" autoFocus /></label>
       {list === null ? (
         <section className="sec">
           <div className="sec-h"><h2>많이 본 레시피</h2></div>
-          {popular.map((r) => <RecipeCard key={r.recipeId} r={r} />)}
+          <div className="tiles">{popular.map((r) => <RecipeTile key={r.recipeId} r={r} />)}</div>
         </section>
       ) : list.length ? (
         <section className="sec">
           <div className="sec-h"><h2>검색 결과 <span className="count">{list.length}</span></h2></div>
-          {list.map((r) => <RecipeCard key={r.recipeId} r={r} />)}
+          <div className="tiles">{list.map((r) => <RecipeTile key={r.recipeId} r={r} />)}</div>
         </section>
       ) : (
         <div className="empty">'{q.trim()}'에 맞는 레시피가 없어요.<br />다른 요리 이름이나 재료로 검색해 보세요.</div>
