@@ -5,7 +5,8 @@ import { api } from '../api/index.js';
 import IngredientChip from '../components/IngredientChip.jsx';
 import PrimaryButton from '../components/PrimaryButton.jsx';
 import { FoodPic, IngPic } from '../components/Pic.jsx';
-import { ClockI, HatI, SearchI } from '../components/Icons.jsx';
+import Logo from '../components/Logo.jsx';
+import { ClockI, SearchI } from '../components/Icons.jsx';
 
 // 1-① 홈 화면
 export default function Home() {
@@ -20,7 +21,7 @@ export default function Home() {
   };
   return (
     <main className="page">
-      <div className="brand brand-home"><span className="hat"><HatI /></span><b>냉장고를 부탁해</b><p>냉장고 속 재료로 맛있는 요리를 찾아보세요!</p></div>
+      <div className="brand brand-home"><Logo /><b>냉장고를 부탁해</b><p>냉장고 속 재료로 맛있는 요리를 찾아보세요!</p></div>
       <button className="search search-home" onClick={() => nav('/search')}><SearchI /><span>어떤 재료가 있나요?</span></button>
       <section className="sec">
         <div className="sec-h"><h2>최근 검색어</h2>{recent.length > 0 && <button className="link" onClick={() => removeRecent(null)}>전체 삭제</button>}</div>

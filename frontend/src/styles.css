@@ -372,3 +372,6 @@ nav.tabs { background: rgba(255, 255, 255, .94); backdrop-filter: blur(14px); -w
 .rtile em { font-style: normal; }
 .rtile .reason { font-size: 12px; color: var(--accent); font-weight: 700; }
 .rtile-wrap .heart { top: 16px; right: 16px; width: 32px; height: 32px; background: rgba(255, 255, 255, .85); box-shadow: var(--shadow); }
+
+/* 로고 (시안 1) */
+.brand-home .logo { width: clamp(108px, 17vh, 150px); height: auto; }
