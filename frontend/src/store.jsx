@@ -19,6 +19,7 @@ export function AppProvider({ children }) {
   const [recent, setRecent] = usePersist('recent', [16, 1, 4, 19]);
   const [favorites, setFavorites] = usePersist('favorites', api.usingSupabase ? [] : [4, 3]);
   const [following, setFollowing] = usePersist('following', []);
+  const [fridge, setFridge] = usePersist('fridge', null); // 설정 > 내 냉장고 (모델 코드)
   const [toastMsg, setToastMsg] = useState('');
   const timer = useRef();
   const toast = (m) => { setToastMsg(m); clearTimeout(timer.current); timer.current = setTimeout(() => setToastMsg(''), 2200); };
@@ -65,7 +66,7 @@ export function AppProvider({ children }) {
   };
 
   return (
-    <Ctx.Provider value={{ ready, user, needLogin, selected, setSelected, toggleSelected, recent, setRecent, addRecent, removeRecent, favorites, toggleFavorite, following, toggleFollow, toastMsg, toast }}>
+    <Ctx.Provider value={{ ready, user, needLogin, selected, setSelected, toggleSelected, recent, setRecent, addRecent, removeRecent, favorites, toggleFavorite, following, toggleFollow, fridge, setFridge, toastMsg, toast }}>
       {children}
     </Ctx.Provider>
   );

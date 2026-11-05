@@ -3,12 +3,14 @@ import { useNavigate } from 'react-router-dom';
 import { useApp } from '../store.jsx';
 import { api } from '../api/index.js';
 import RecipeCard from '../components/RecipeCard.jsx';
+import { findFridge } from '../data/fridges.js';
 import { ChevI, HeartI, PlusI, SearchI, UserI } from '../components/Icons.jsx';
 
 // 4 마이페이지
 export default function MyPage() {
   const nav = useNavigate();
-  const { user, favorites, following, recent, removeRecent, toast } = useApp();
+  const { user, favorites, following, recent, removeRecent, toast, fridge } = useApp();
+  const myFridge = findFridge(fridge);
   const [profile, setProfile] = useState(null);
   const [mine, setMine] = useState([]);
   const [open, setOpen] = useState('');
@@ -33,6 +35,7 @@ export default function MyPage() {
           <button onClick={() => setOpen(open === 'mine' ? '' : 'mine')}><PlusI /><span>내가 등록한 레시피</span><ChevI /></button>
           <button onClick={() => nav('/favorites')}><HeartI /><span>찜한 레시피</span><ChevI /></button>
           <button onClick={() => setOpen(open === 'recent' ? '' : 'recent')}><SearchI /><span>최근 검색어</span><ChevI /></button>
+          <button onClick={() => nav('/settings')}><span className="mi">🧊</span><span>냉장고 설정<small className="sub">{myFridge ? `${myFridge.brand} · ${myFridge.size} ${myFridge.type} (${myFridge.liters}L)` : '아직 선택하지 않았어요'}</small></span><ChevI /></button>
           <button onClick={soon}><UserI /><span>계정 설정</span><ChevI /></button>
           {user && <button onClick={logout}><UserI /><span>로그아웃</span><ChevI /></button>}
         </div>

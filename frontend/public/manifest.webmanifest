@@ -1,0 +1,9 @@
+{
+  "name": "냉장고를 부탁해",
+  "short_name": "냉부",
+  "start_url": "/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#ffffff",
+  "theme_color": "#f26b1d"
+}

@@ -11,6 +11,9 @@ import './styles.css';
 );
 document.addEventListener('touchmove', (e) => { if (e.touches.length > 1) e.preventDefault(); }, { passive: false });
 
+// 세로 고정: 지원하는 브라우저(안드로이드 홈 화면 앱 등)에서는 화면 회전을 잠금
+try { screen.orientation?.lock?.('portrait').catch(() => {}); } catch { /* 미지원 */ }
+
 ReactDOM.createRoot(document.getElementById('root')).render(
   <React.StrictMode>
     <BrowserRouter>
