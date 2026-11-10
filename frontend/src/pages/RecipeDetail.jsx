@@ -1,3 +1,4 @@
+import Modal from '../components/Modal.jsx';
 import { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useApp } from '../store.jsx';
@@ -114,26 +115,22 @@ export default function RecipeDetail() {
         <Comments recipeId={r.recipeId} writerId={r.writerId} writer={r.writer} />
         <div className="sticky-cta"><PrimaryButton onClick={() => nav(`/recipes/${r.recipeId}/cook`)}>요리 시작하기</PrimaryButton></div>
       </main>
-      {zoom && <div className="scrim zoom" onClick={() => setZoom(null)}><img src={zoom} alt="단계 사진 크게 보기" /></div>}
+      {zoom && <Modal zoom onClose={() => setZoom(null)}><img src={zoom} alt="단계 사진 크게 보기" /></Modal>}
       {deleting && (
-        <div className="scrim" onClick={(e) => e.target === e.currentTarget && setDeleting(false)}>
-          <div className="sheet" role="dialog" aria-modal="true">
+        <Modal onClose={() => setDeleting(false)}>
             <h3>이 레시피를 삭제할까요?</h3>
             <p className="muted">조리 단계, 재료, 사진, 찜·후기·질문까지 함께 지워지고 되돌릴 수 없어요.</p>
             <div className="btn-row"><PrimaryButton ghost onClick={() => setDeleting(false)}>취소</PrimaryButton><button className="btn danger-btn" onClick={removeRecipe}>삭제하기</button></div>
-          </div>
-        </div>
+        </Modal>
       )}
       {reporting && (
-        <div className="scrim" onClick={(e) => e.target === e.currentTarget && setReporting(false)}>
-          <div className="sheet" role="dialog" aria-modal="true">
+        <Modal onClose={() => setReporting(false)}>
             <h3>이 레시피를 신고할까요?</h3>
             {['부적절한 내용', '저작권 침해', '광고 · 스팸', '기타'].map((x) => (
               <label key={x} className="radio"><input type="radio" name="rp" checked={reason === x} onChange={() => setReason(x)} />{x}</label>
             ))}
             <div className="btn-row"><PrimaryButton ghost onClick={() => setReporting(false)}>취소</PrimaryButton><PrimaryButton onClick={sendReport}>신고하기</PrimaryButton></div>
-          </div>
-        </div>
+        </Modal>
       )}
     </>
   );

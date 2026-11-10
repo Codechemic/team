@@ -510,3 +510,19 @@ nav.tabs { background: rgba(255, 255, 255, .94); backdrop-filter: blur(14px); -w
 .danger-link { align-self: flex-start; color: var(--low); }
 .sheet .field input, .sheet .field select { width: 100%; }
 .tile-emo { font-size: 26px; line-height: 28px; margin-bottom: auto; }
+
+/* 한글이 단어 중간에서 줄바꿈되지 않게 (안드로이드 크롬·사파리 공통) */
+body { word-break: keep-all; overflow-wrap: anywhere; }
+/* 점검 공지·연결 끊김 배너 (UC-N06) */
+.sys-banner { position: sticky; top: 0; z-index: 30; display: flex; align-items: flex-start; gap: 8px; padding: 10px 14px; font-size: 13px; line-height: 1.45; }
+.sys-banner.info { background: #e8f1ff; color: #1d4f91; }
+.sys-banner.warn { background: #fff4e6; color: #8a4b00; }
+.sys-banner.error { background: #ffe5e5; color: #a61e1e; }
+.sys-banner b { flex: none; }
+.sys-banner span { flex: 1; }
+.sys-banner button { flex: none; color: inherit; font-size: 16px; line-height: 1; padding: 0 2px; opacity: .7; }
+.crash { min-height: 70vh; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 12px; padding: 24px; text-align: center; }
+.crash .ic { font-size: 48px; }
+.crash h2 { margin: 0; font-size: 19px; }
+.crash p { margin: 0; color: var(--muted); font-size: 14px; }
+.route-wait { padding: 16px; }

@@ -1,3 +1,4 @@
+import Modal from '../components/Modal.jsx';
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Header from '../components/Header.jsx';
@@ -89,8 +90,7 @@ export default function Account() {
       </main>
 
       {sheet && (
-        <div className="scrim" onClick={(e) => e.target === e.currentTarget && setSheet('')}>
-          <div className="sheet" role="dialog" aria-modal="true">
+        <Modal onClose={() => setSheet('')}>
             {sheet === 'logout' ? (
               <>
                 <h3>로그아웃할까요?</h3>
@@ -105,8 +105,7 @@ export default function Account() {
                 <div className="btn-row"><PrimaryButton ghost onClick={() => setSheet('')}>취소</PrimaryButton><button className="btn danger-btn" disabled={confirmText.trim() !== '탈퇴' || busy === 'del'} onClick={remove}>{busy === 'del' ? '처리 중…' : '탈퇴하기'}</button></div>
               </>
             )}
-          </div>
-        </div>
+        </Modal>
       )}
     </>
   );

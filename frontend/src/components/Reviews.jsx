@@ -1,3 +1,4 @@
+import Modal from './Modal.jsx';
 import { useEffect, useRef, useState } from 'react';
 import { useApp } from '../store.jsx';
 import { api } from '../api/index.js';
@@ -75,7 +76,7 @@ export default function Reviews({ recipeId, mineRecipe, onRating }) {
           ))}
         </div>
       ) : !form && <div className="empty">{mineRecipe ? '아직 후기가 없어요' : '첫 후기를 남겨 주세요'}</div>}
-      {zoom && <div className="scrim zoom" onClick={() => setZoom(null)}><img src={zoom} alt="후기 사진 크게 보기" /></div>}
+      {zoom && <Modal zoom onClose={() => setZoom(null)}><img src={zoom} alt="후기 사진 크게 보기" /></Modal>}
     </section>
   );
 }

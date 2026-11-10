@@ -1,3 +1,4 @@
+import Modal from '../components/Modal.jsx';
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useApp } from '../store.jsx';
@@ -72,13 +73,11 @@ export default function MyPage() {
         )}
       </main>
       {del && (
-        <div className="scrim" onClick={(e) => e.target === e.currentTarget && setDel(null)}>
-          <div className="sheet" role="dialog" aria-modal="true">
+        <Modal onClose={() => setDel(null)}>
             <h3>'{del.title}'을(를) 삭제할까요?</h3>
             <p className="muted">조리 단계, 재료, 사진, 찜·후기·질문까지 함께 지워지고 되돌릴 수 없어요.</p>
             <div className="btn-row"><PrimaryButton ghost onClick={() => setDel(null)}>취소</PrimaryButton><button className="btn danger-btn" disabled={busy} onClick={doDelete}>{busy ? '삭제 중…' : '삭제하기'}</button></div>
-          </div>
-        </div>
+        </Modal>
       )}
     </>
   );

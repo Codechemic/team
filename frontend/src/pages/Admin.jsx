@@ -1,3 +1,4 @@
+import Modal from '../components/Modal.jsx';
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Header from '../components/Header.jsx';
@@ -71,8 +72,7 @@ export default function Admin() {
         )}
       </main>
       {form && (
-        <div className="scrim" onClick={(e) => e.target === e.currentTarget && setForm(null)}>
-          <div className="sheet" role="dialog" aria-modal="true">
+        <Modal onClose={() => setForm(null)}>
             <h3>{form.id ? '재료 수정' : '새 재료 추가'}</h3>
             <div className="two">
               <div className="field"><label htmlFor="an">재료명</label><input id="an" value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} placeholder="예: 대파" /></div>
@@ -90,8 +90,7 @@ export default function Admin() {
               </div>
             ) : <button className="link danger-link" onClick={() => setConfirmDel(true)}>이 재료 삭제</button>)}
             <div className="btn-row"><PrimaryButton ghost onClick={() => setForm(null)}>닫기</PrimaryButton><PrimaryButton disabled={busy || !form.name.trim()} onClick={save}>{busy ? '저장 중…' : '저장'}</PrimaryButton></div>
-          </div>
-        </div>
+        </Modal>
       )}
     </>
   );
