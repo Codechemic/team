@@ -28,7 +28,7 @@ export const INGREDIENTS = [
  },
  {
   "id": 4,
-  "name": "양파",
+  "name": "양파", "substituteInfo": "대파 흰 부분",
   "category": "채소",
   "emoji": "🧅",
   "aliases": [],
@@ -36,7 +36,7 @@ export const INGREDIENTS = [
  },
  {
   "id": 5,
-  "name": "대파",
+  "name": "대파", "substituteInfo": "쪽파, 양파",
   "category": "채소",
   "emoji": "🌿",
   "aliases": [
@@ -57,7 +57,7 @@ export const INGREDIENTS = [
  },
  {
   "id": 7,
-  "name": "애호박",
+  "name": "애호박", "substituteInfo": "주키니, 가지",
   "category": "채소",
   "emoji": "🥒",
   "aliases": [
@@ -87,7 +87,7 @@ export const INGREDIENTS = [
  },
  {
   "id": 10,
-  "name": "돼지고기",
+  "name": "돼지고기", "substituteInfo": "닭고기, 소고기",
   "category": "육류",
   "emoji": "🥓",
   "aliases": [
@@ -99,7 +99,7 @@ export const INGREDIENTS = [
  },
  {
   "id": 11,
-  "name": "닭고기",
+  "name": "닭고기", "substituteInfo": "돼지고기",
   "category": "육류",
   "emoji": "🍗",
   "aliases": [
@@ -110,7 +110,7 @@ export const INGREDIENTS = [
  },
  {
   "id": 12,
-  "name": "소고기",
+  "name": "소고기", "substituteInfo": "돼지고기",
   "category": "육류",
   "emoji": "🥩",
   "aliases": [
@@ -121,7 +121,7 @@ export const INGREDIENTS = [
  },
  {
   "id": 13,
-  "name": "연어",
+  "name": "연어", "substituteInfo": "참치 회",
   "category": "수산물",
   "emoji": "🐟",
   "aliases": [],
@@ -129,7 +129,7 @@ export const INGREDIENTS = [
  },
  {
   "id": 14,
-  "name": "오징어",
+  "name": "오징어", "substituteInfo": "새우, 낙지",
   "category": "수산물",
   "emoji": "🦑",
   "aliases": [],
@@ -137,7 +137,7 @@ export const INGREDIENTS = [
  },
  {
   "id": 15,
-  "name": "새우",
+  "name": "새우", "substituteInfo": "오징어",
   "category": "수산물",
   "emoji": "🦐",
   "aliases": [
@@ -176,7 +176,7 @@ export const INGREDIENTS = [
  },
  {
   "id": 19,
-  "name": "치즈",
+  "name": "치즈", "substituteInfo": "모짜렐라 치즈",
   "category": "기타",
   "emoji": "🧀",
   "aliases": [
@@ -186,7 +186,7 @@ export const INGREDIENTS = [
  },
  {
   "id": 20,
-  "name": "부침가루",
+  "name": "부침가루", "substituteInfo": "밀가루 + 소금 약간",
   "category": "기타",
   "emoji": "🌾",
   "aliases": [
@@ -220,7 +220,7 @@ export const INGREDIENTS = [
  },
  {
   "id": 24,
-  "name": "고추장",
+  "name": "고추장", "substituteInfo": "고춧가루 + 간장 + 설탕",
   "category": "양념",
   "emoji": "🧂",
   "aliases": [],
@@ -228,7 +228,7 @@ export const INGREDIENTS = [
  },
  {
   "id": 25,
-  "name": "된장",
+  "name": "된장", "substituteInfo": "쌈장",
   "category": "양념",
   "emoji": "🧂",
   "aliases": [],
@@ -244,7 +244,7 @@ export const INGREDIENTS = [
  },
  {
   "id": 27,
-  "name": "새우젓",
+  "name": "새우젓", "substituteInfo": "소금",
   "category": "양념",
   "emoji": "🧂",
   "aliases": [],
@@ -301,7 +301,7 @@ export const INGREDIENTS = [
  },
  {
   "id": 33,
-  "name": "맛술",
+  "name": "맛술", "substituteInfo": "청주, 설탕 약간",
   "category": "양념",
   "emoji": "🍶",
   "aliases": [
@@ -311,7 +311,7 @@ export const INGREDIENTS = [
  },
  {
   "id": 34,
-  "name": "버터",
+  "name": "버터", "substituteInfo": "식용유",
   "category": "양념",
   "emoji": "🧈",
   "aliases": [],
@@ -319,7 +319,7 @@ export const INGREDIENTS = [
  },
  {
   "id": 35,
-  "name": "올리고당",
+  "name": "올리고당", "substituteInfo": "설탕, 꿀",
   "category": "양념",
   "emoji": "🍯",
   "aliases": [
@@ -329,7 +329,7 @@ export const INGREDIENTS = [
  },
  {
   "id": 36,
-  "name": "굴소스",
+  "name": "굴소스", "substituteInfo": "간장 + 설탕 약간",
   "category": "양념",
   "emoji": "🫙",
   "aliases": [],
@@ -345,7 +345,7 @@ export const INGREDIENTS = [
  },
  {
   "id": 38,
-  "name": "양배추",
+  "name": "양배추", "substituteInfo": "배추",
   "category": "채소",
   "emoji": "🥬",
   "aliases": [],
@@ -353,7 +353,7 @@ export const INGREDIENTS = [
  },
  {
   "id": 39,
-  "name": "청양고추",
+  "name": "청양고추", "substituteInfo": "고춧가루",
   "category": "양념",
   "emoji": "🌶️",
   "aliases": [
@@ -364,7 +364,7 @@ export const INGREDIENTS = [
  },
  {
   "id": 40,
-  "name": "식초",
+  "name": "식초", "substituteInfo": "레몬즙",
   "category": "양념",
   "emoji": "🍶",
   "aliases": [],

@@ -25,9 +25,9 @@ let ingredientCache = Object.fromEntries(INGREDIENTS.map((i) => [i.id, i]));
 /* ---------------- IngredientService ---------------- */
 const IngredientService = {
   async preload() {
-    if (!USE_SUPABASE) return;
-    const rows = must(await sb.from('ingredient').select('ingredient_id, name, category, emoji, is_seasoning'));
-    ingredientCache = Object.fromEntries(rows.map((r) => [r.ingredient_id, { id: r.ingredient_id, name: r.name, category: r.category, emoji: r.emoji, isSeasoning: r.is_seasoning }]));
+    if (!USE_SUPABASE) { ingredientCache = Object.fromEntries(INGREDIENTS.map((i) => [i.id, i])); return; }
+    const rows = must(await sb.from('ingredient').select('ingredient_id, name, category, emoji, is_seasoning, substitute_info'));
+    ingredientCache = Object.fromEntries(rows.map((r) => [r.ingredient_id, { id: r.ingredient_id, name: r.name, category: r.category, emoji: r.emoji, isSeasoning: r.is_seasoning, substituteInfo: r.substitute_info }]));
   },
   ingredient: (id) => ingredientCache[id] || { id, name: '알 수 없는 재료', emoji: '❔' },
   async searchIngredients(q, category) {
@@ -103,15 +103,35 @@ const RecipeService = {
   },
   async createRecipe(body) {
     if (!USE_SUPABASE) return mock.createRecipe(body);
-    const mainPhoto = body.mainPhoto?.startsWith('data:') ? await RecipeService.uploadPhoto(body.mainPhoto) : body.mainPhoto;
-    const recipeId = must(await sb.rpc('create_recipe', { payload: { ...body, mainPhoto } }));
-    // 단계별 사진 (UC-E01): 올린 뒤 해당 단계에 주소 저장
-    const withPhoto = body.steps.filter((s) => s.stepPhoto);
-    for (const s of withPhoto) {
-      const url = s.stepPhoto.startsWith('data:') ? await RecipeService.uploadPhoto(s.stepPhoto) : s.stepPhoto;
-      must(await sb.from('recipe_step').update({ step_photo: url }).eq('recipe_id', recipeId).eq('step_number', s.stepNumber));
+    const payload = await RecipeService.uploadAll(body);
+    const recipeId = must(await sb.rpc('create_recipe', { payload }));
+    // 단계 사진 주소 저장 (06 SQL 실행 전 등록 함수도 지원)
+    for (const s of payload.steps.filter((x) => x.stepPhoto)) {
+      must(await sb.from('recipe_step').update({ step_photo: s.stepPhoto }).eq('recipe_id', recipeId).eq('step_number', s.stepNumber));
     }
     return { recipeId };
+  },
+  // 대표·단계 사진 중 새로 고른 것(data:)만 저장소에 올리고 주소로 바꿈
+  async uploadAll(body) {
+    const up = (v) => (v?.startsWith('data:') ? RecipeService.uploadPhoto(v) : v || null);
+    return { ...body, mainPhoto: await up(body.mainPhoto), steps: await Promise.all(body.steps.map(async (s) => ({ ...s, stepPhoto: await up(s.stepPhoto) }))) };
+  },
+  // UC-E02 수정용으로 내 레시피 불러오기 (조회수 증가 없음)
+  async getRecipeForEdit(id) {
+    if (!USE_SUPABASE) return mock.getRecipeForEdit(id);
+    const r = must(await sb.from('recipe').select('*, recipe_ingredient(ingredient_id, quantity, unit), recipe_step(step_number, description, step_photo, timer_seconds)').eq('recipe_id', id).single());
+    return {
+      recipeId: r.recipe_id, writerId: r.writer_id, title: r.title, intro: r.intro || '', mainPhoto: r.main_photo || '', cookingTime: r.cooking_time, difficulty: r.difficulty, servings: r.servings,
+      ingredients: r.recipe_ingredient.map((x) => ({ ingredientId: x.ingredient_id, quantity: x.quantity == null ? null : Number(x.quantity), unit: x.unit })),
+      steps: r.recipe_step.sort((a, b) => a.step_number - b.step_number).map((s) => ({ description: s.description, stepPhoto: s.step_photo, timerSeconds: s.timer_seconds })),
+    };
+  },
+  async updateRecipe(id, body) {
+    if (!USE_SUPABASE) return mock.updateRecipe(id, body);
+    const payload = await RecipeService.uploadAll(body);
+    const { error } = await sb.rpc('update_recipe', { p_recipe_id: Number(id), payload });
+    if (error?.code === 'PGRST202') throw new Error('레시피 수정 기능은 Supabase에 06 SQL을 실행한 뒤 사용할 수 있어요');
+    if (error) throw new Error(friendly(error));
   },
   // UC-E02 내 레시피 삭제 (단계·재료·찜·후기·댓글은 DB에서 함께 삭제)
   async deleteRecipe(recipeId, mainPhoto) {
@@ -305,6 +325,76 @@ const FridgeService = {
   },
 };
 
+/* ---------------- NotificationService (UC-F05 레시피 알림) ---------------- */
+const NotificationService = {
+  async notifications() {
+    const user = await UserService.currentUser();
+    if (!USE_SUPABASE || !user) return [];
+    const { data, error } = await sb.from('notification').select('*').eq('user_id', user.id).order('created_at', { ascending: false }).limit(50);
+    if (error) return [];
+    return data.map((n) => ({ id: n.notification_id, type: n.type, relatedType: n.related_type, relatedId: n.related_id, message: n.message, isRead: n.is_read, createdAt: n.created_at }));
+  },
+  async unreadCount() {
+    const user = await UserService.currentUser();
+    if (!USE_SUPABASE || !user) return 0;
+    const { count } = await sb.from('notification').select('notification_id', { count: 'exact', head: true }).eq('user_id', user.id).eq('is_read', false);
+    return count || 0;
+  },
+  async markAllRead() {
+    const user = await UserService.currentUser();
+    if (!USE_SUPABASE || !user) return;
+    await sb.from('notification').update({ is_read: true }).eq('user_id', user.id).eq('is_read', false);
+  },
+  async deleteNotification(id) {
+    if (!USE_SUPABASE) return;
+    must(await sb.from('notification').delete().eq('notification_id', id));
+  },
+};
+
+/* ---------------- AdminService (UC-G02 관리자 재료 DB 관리) ---------------- */
+const AdminService = {
+  async isAdmin() {
+    if (!USE_SUPABASE) return true;   // 체험 모드는 관리자 화면 미리보기 허용
+    const user = await UserService.currentUser();
+    if (!user) return false;
+    const { data, error } = await sb.rpc('is_admin');
+    return !error && data === true;
+  },
+  async adminIngredients() {
+    if (!USE_SUPABASE) return mock.adminIngredients();
+    const rows = must(await sb.from('ingredient').select('ingredient_id, name, category, emoji, is_seasoning, substitute_info, ingredient_alias(alias_name), recipe_ingredient(count)').order('category').order('name'));
+    return rows.map((r) => ({ id: r.ingredient_id, name: r.name, category: r.category, emoji: r.emoji || '', isSeasoning: r.is_seasoning, substituteInfo: r.substitute_info || '', aliases: r.ingredient_alias.map((a) => a.alias_name), usedIn: r.recipe_ingredient[0]?.count || 0 }));
+  },
+  async saveIngredient(x) {
+    if (!USE_SUPABASE) { await mock.saveIngredient(x); return IngredientService.preload(); }
+    const name = x.name.trim();
+    if (!name) throw new Error('재료 이름을 입력해 주세요');
+    const row = { name, category: x.category, emoji: x.emoji?.trim() || null, is_seasoning: !!x.isSeasoning, substitute_info: x.substituteInfo?.trim() || null };
+    let id = x.id;
+    const res = id ? await sb.from('ingredient').update(row).eq('ingredient_id', id).select('ingredient_id') : await sb.from('ingredient').insert(row).select('ingredient_id');
+    if (res.error?.code === '23505') throw new Error('같은 이름의 재료가 이미 있어요');
+    const saved = must(res);
+    if (!saved.length) throw new Error('관리자만 재료를 수정할 수 있어요');
+    id = saved[0].ingredient_id;
+    const aliases = [...new Set(x.aliases.map((a) => a.trim()).filter((a) => a && a !== name))];
+    must(await sb.from('ingredient_alias').delete().eq('ingredient_id', id));
+    if (aliases.length) {
+      const r2 = await sb.from('ingredient_alias').insert(aliases.map((a) => ({ alias_name: a, ingredient_id: id })));
+      if (r2.error?.code === '23505') throw new Error('다른 재료가 이미 쓰고 있는 별칭이 있어요');
+      must(r2);
+    }
+    await IngredientService.preload();
+    return id;
+  },
+  async deleteIngredient(id) {
+    if (!USE_SUPABASE) { await mock.deleteIngredient(id); return IngredientService.preload(); }
+    const res = await sb.from('ingredient').delete().eq('ingredient_id', id).select('ingredient_id');
+    if (res.error?.code === '23503') throw new Error('레시피에 쓰이는 재료라 삭제할 수 없어요. 레시피에서 먼저 빼 주세요');
+    if (!must(res).length) throw new Error('관리자만 재료를 삭제할 수 있어요');
+    await IngredientService.preload();
+  },
+};
+
 /* ---------------- PreferenceService (설정 > 내 냉장고) ---------------- */
 const PreferenceService = {
   async fridgeModel() {
@@ -322,6 +412,6 @@ const PreferenceService = {
 };
 
 export const api = {
-  ...IngredientService, ...RecipeService, ...InteractionService, ...ReportService, ...RecentSearchService, ...PreferenceService, ...FridgeService, ...ReviewService, ...CommentService,
+  ...IngredientService, ...RecipeService, ...InteractionService, ...ReportService, ...RecentSearchService, ...PreferenceService, ...FridgeService, ...ReviewService, ...CommentService, ...NotificationService, ...AdminService,
   user: UserService, usingSupabase: USE_SUPABASE,
 };

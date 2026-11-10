@@ -19,6 +19,8 @@ export function AppProvider({ children }) {
   const [recent, setRecent] = usePersist('recent', [16, 1, 4, 19]);
   const [favorites, setFavorites] = usePersist('favorites', api.usingSupabase ? [] : [4, 3]);
   const [following, setFollowing] = usePersist('following', []);
+  const [unread, setUnread] = useState(0);   // 안 읽은 알림 수 (UC-F05)
+  const [isAdmin, setIsAdmin] = useState(!api.usingSupabase);
   const synced = useRef(null);   // DB에 저장된 냉장고 재료 ID (동기화 전 null)
   const [fridge, setFridgeLocal] = usePersist('fridge', null); // 설정 > 내 냉장고 (모델 코드)
   const fridgeRef = useRef(fridge); fridgeRef.current = fridge;
@@ -45,7 +47,13 @@ export function AppProvider({ children }) {
         setSelected((sel) => [...new Set([...dbIds, ...sel])]);
       }).catch(() => {});
       api.fridgeModel().then((m) => m !== undefined && (m ? setFridgeLocal(m) : fridgeRef.current && api.saveFridgeModel(fridgeRef.current))).catch(() => {});
-    } else { setFavorites([]); synced.current = null; }
+    } else { setFavorites([]); synced.current = null; setUnread(0); setIsAdmin(false); }
+    if (user) {
+      api.isAdmin().then(setIsAdmin).catch(() => {});
+      const poll = () => api.unreadCount().then(setUnread).catch(() => {});
+      poll(); const h = setInterval(poll, 60000);
+      return () => clearInterval(h);
+    }
   }, [user]);
 
   // 재료 입력·삭제(담기, 빼기, 모두 지우기)가 일어나면 DB와 차이만 반영
@@ -87,7 +95,7 @@ export function AppProvider({ children }) {
   };
 
   return (
-    <Ctx.Provider value={{ ready, user, needLogin, selected, setSelected, toggleSelected, recent, setRecent, addRecent, removeRecent, favorites, toggleFavorite, following, toggleFollow, fridge, setFridge, toastMsg, toast }}>
+    <Ctx.Provider value={{ ready, user, needLogin, selected, setSelected, toggleSelected, recent, setRecent, addRecent, removeRecent, favorites, toggleFavorite, following, toggleFollow, fridge, setFridge, unread, setUnread, isAdmin, toastMsg, toast }}>
       {children}
     </Ctx.Provider>
   );

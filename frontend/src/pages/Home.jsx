@@ -11,7 +11,7 @@ import { ClockI, SearchI } from '../components/Icons.jsx';
 // 1-① 홈 화면
 export default function Home() {
   const nav = useNavigate();
-  const { selected, toggleSelected, setSelected, recent, removeRecent, addRecent } = useApp();
+  const { selected, toggleSelected, setSelected, recent, removeRecent, addRecent, unread } = useApp();
   const [hint, setHint] = useState('');
   const [popular, setPopular] = useState([]);
   useEffect(() => { api.popularRecipes().then(setPopular).catch(() => {}); }, []);
@@ -21,6 +21,10 @@ export default function Home() {
   };
   return (
     <main className="page">
+      <button className="bell" onClick={() => nav('/notifications')} aria-label={`알림${unread ? ` ${unread}개` : ''}`}>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M6 8a6 6 0 1 1 12 0c0 7 3 9 3 9H3s3-2 3-9" /><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0" /></svg>
+        {unread > 0 && <span className="bell-n">{unread > 9 ? '9+' : unread}</span>}
+      </button>
       <div className="brand brand-home"><Logo /><b>냉장고를 부탁해</b><p>냉장고 속 재료로 맛있는 요리를 찾아보세요!</p></div>
       <button className="search search-home" onClick={() => nav('/search')}><SearchI /><span>어떤 재료가 있나요?</span></button>
       <section className="sec">

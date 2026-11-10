@@ -476,3 +476,37 @@ nav.tabs { background: rgba(255, 255, 255, .94); backdrop-filter: blur(14px); -w
 .cm-ans .a { color: var(--brand); font-weight: 800; }
 .cm-reply { margin-top: 6px; font-size: 13px; }
 .cm > .muted { display: block; margin-top: 6px; }
+
+/* ===== 알림 (UC-F05) ===== */
+.page { position: relative; }
+.bell { position: absolute; top: 12px; right: 12px; width: 42px; height: 42px; display: grid; place-items: center; border-radius: 50%; background: #fff; box-shadow: var(--shadow); color: var(--fg); z-index: 2; }
+.bell svg { width: 22px; height: 22px; }
+.bell-n { position: absolute; top: 2px; right: 2px; min-width: 18px; height: 18px; padding: 0 4px; border-radius: 99px; background: #e03131; color: #fff; font-size: 11px; font-weight: 800; display: grid; place-items: center; }
+.nt-list { display: flex; flex-direction: column; gap: 8px; }
+.nt { display: flex; align-items: center; gap: 6px; padding: 12px; border-radius: 16px; background: #fff; box-shadow: var(--shadow); }
+.nt.new { background: #fff4ea; }
+.nt-main { flex: 1; min-width: 0; display: flex; gap: 12px; align-items: center; text-align: left; }
+.nt-ic { width: 40px; height: 40px; flex: none; display: grid; place-items: center; border-radius: 12px; background: var(--accent-soft); font-size: 20px; }
+.nt-tx { display: flex; flex-direction: column; gap: 2px; font-size: 14px; line-height: 1.45; }
+.nt-del { width: 28px; height: 28px; flex: none; border-radius: 50%; color: var(--muted); font-size: 18px; }
+/* 수정 */
+.my-rc-btns { display: flex; flex-direction: column; gap: 6px; }
+.my-rc-edit { height: 30px; padding: 0 12px; border-radius: 99px; background: var(--accent-soft); color: var(--accent); font-size: 12.5px; font-weight: 700; }
+.subst { display: block; font-size: 12px; color: #2b7a4b; font-weight: 600; }
+/* 관리자 재료 관리 (UC-G02) */
+.tile.admin { background: #eef3ff; }
+.adm-sum { font-size: 13.5px; color: var(--muted); }
+.adm-sum b { color: var(--fg); font-size: 16px; }
+.adm-list { display: flex; flex-direction: column; gap: 8px; }
+.adm-row { display: flex; align-items: center; gap: 12px; padding: 12px; border-radius: 16px; background: #fff; box-shadow: var(--shadow); text-align: left; }
+.adm-pic { width: 42px; height: 42px; padding: 6px; border-radius: 12px; background: var(--surface-2); font-size: 24px; }
+.adm-tx { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+.adm-tx b { font-size: 15px; display: flex; flex-wrap: wrap; align-items: center; gap: 4px; }
+.adm-tx > span { font-size: 12.5px; color: var(--muted); }
+.cat-tag { font-style: normal; padding: 1px 7px; border-radius: 99px; background: var(--surface-2); color: var(--muted); font-size: 11px; font-weight: 700; }
+.adm-used { flex: none; font-size: 12px; color: var(--muted); }
+.chk { display: flex; align-items: center; gap: 8px; font-size: 14px; }
+.chk input { width: 18px; height: 18px; accent-color: var(--accent); }
+.danger-link { align-self: flex-start; color: var(--low); }
+.sheet .field input, .sheet .field select { width: 100%; }
+.tile-emo { font-size: 26px; line-height: 28px; margin-bottom: auto; }

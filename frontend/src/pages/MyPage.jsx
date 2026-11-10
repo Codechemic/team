@@ -11,7 +11,7 @@ import { FoodPic } from '../components/Pic.jsx';
 // 4 마이페이지
 export default function MyPage() {
   const nav = useNavigate();
-  const { user, favorites, following, recent, removeRecent, toast, fridge } = useApp();
+  const { user, favorites, following, recent, removeRecent, toast, fridge, unread, isAdmin } = useApp();
   const myFridge = findFridge(fridge);
   const [profile, setProfile] = useState(null);
   const [mine, setMine] = useState([]);
@@ -45,6 +45,8 @@ export default function MyPage() {
           <button className={`tile${open === 'recent' ? ' on' : ''}`} onClick={() => setOpen(open === 'recent' ? '' : 'recent')}><SearchI /><b>최근 검색어</b><span>{recent.length ? `재료 ${recent.length}개` : '아직 없어요'}</span></button>
           <button className="tile" onClick={() => nav('/settings')}><FridgeI /><b>냉장고 설정</b><span>{myFridge ? `${myFridge.brand} · ${myFridge.size}` : '모델 선택하기'}</span></button>
           <button className="tile" onClick={() => (api.usingSupabase && !user ? nav('/login') : nav('/account'))}><UserI /><b>계정 설정</b><span>닉네임·비밀번호</span></button>
+          <button className="tile" onClick={() => nav('/notifications')}><span className="tile-emo">🔔</span><b>알림</b><span>{unread ? `새 알림 ${unread}개` : '새 레시피 소식'}</span></button>
+          {isAdmin && <button className="tile admin" onClick={() => nav('/admin')}><span className="tile-emo">🛠️</span><b>재료 관리</b><span>관리자 전용</span></button>}
         </div>
         {open === 'mine' && (mine.length ? (
           <div className="sec">
@@ -57,7 +59,7 @@ export default function MyPage() {
                     <span className="my-rc-stats"><span>👀 {Number(r.views || 0).toLocaleString()}</span><span>❤️ {r.saves || 0}</span><span>★ {Number(r.averageRating || 0).toFixed(1)}</span></span>
                   </span>
                 </button>
-                <button className="my-rc-del" onClick={() => setDel(r)}>삭제</button>
+                <span className="my-rc-btns"><button className="my-rc-edit" onClick={() => nav(`/register?edit=${r.recipeId}`)}>수정</button><button className="my-rc-del" onClick={() => setDel(r)}>삭제</button></span>
               </div>
             ))}
           </div>

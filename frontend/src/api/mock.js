@@ -96,6 +96,36 @@ export const mock = {
     return wait({ recipeId: r.id });
   },
   report: () => wait({ status: '대기' }),
+  getRecipeForEdit: (id) => {
+    const r = myRecipes().find((x) => String(x.id) === String(id));
+    if (!r) return Promise.reject(new Error('내가 등록한 레시피만 수정할 수 있어요'));
+    return wait({ recipeId: r.id, writerId: 'me', title: r.title, intro: r.intro || '', mainPhoto: r.mainPhoto || '', cookingTime: r.cookingTime, difficulty: r.difficulty, servings: r.servings,
+      ingredients: r.ingredients.map(({ ingredientId, quantity, unit }) => ({ ingredientId, quantity, unit })),
+      steps: r.steps.map((s) => ({ description: s.description, stepPhoto: s.stepPhoto, timerSeconds: s.timerSeconds })) });
+  },
+  updateRecipe: (id, body) => {
+    const all = myRecipes(), k = all.findIndex((x) => String(x.id) === String(id));
+    if (k < 0) return Promise.reject(new Error('내가 등록한 레시피만 수정할 수 있어요'));
+    all[k] = { ...all[k], ...body, steps: body.steps.map((s, i) => ({ ...s, stepNumber: i + 1 })) };
+    localStorage.setItem('fridge_myRecipes', JSON.stringify(all)); return wait(null);
+  },
+  adminIngredients: () => {
+    const used = (id) => allRecipes().filter((r) => r.ingredients.some((x) => x.ingredientId === id)).length;
+    return wait(INGREDIENTS.map((i) => ({ id: i.id, name: i.name, category: i.category, emoji: i.emoji || '', isSeasoning: !!i.isSeasoning, substituteInfo: i.substituteInfo || '', aliases: i.aliases || [], usedIn: used(i.id) })));
+  },
+  saveIngredient: (x) => {
+    const name = x.name.trim();
+    if (!name) return Promise.reject(new Error('재료 이름을 입력해 주세요'));
+    if (INGREDIENTS.some((i) => i.name === name && i.id !== x.id)) return Promise.reject(new Error('같은 이름의 재료가 이미 있어요'));
+    const row = { name, category: x.category, emoji: x.emoji || '', isSeasoning: !!x.isSeasoning, substituteInfo: x.substituteInfo || '', aliases: x.aliases.map((a) => a.trim()).filter(Boolean) };
+    if (x.id) Object.assign(byId[x.id], row);
+    else { const id = Math.max(...INGREDIENTS.map((i) => i.id)) + 1; const n = { id, ...row }; INGREDIENTS.push(n); byId[id] = n; }
+    return wait(null);
+  },
+  deleteIngredient: (id) => {
+    if (allRecipes().some((r) => r.ingredients.some((x) => x.ingredientId === id))) return Promise.reject(new Error('레시피에 쓰이는 재료라 삭제할 수 없어요. 레시피에서 먼저 빼 주세요'));
+    INGREDIENTS.splice(INGREDIENTS.findIndex((i) => i.id === id), 1); delete byId[id]; return wait(null);
+  },
   deleteRecipe: (id) => { localStorage.setItem('fridge_myRecipes', JSON.stringify(myRecipes().filter((r) => r.id !== id))); return wait(null); },
   reviews: (recipeId) => wait(ls('reviews').filter((x) => x.recipeId === Number(recipeId))),
   saveReview: (recipeId, { reviewId, rating, content, photo }) => {

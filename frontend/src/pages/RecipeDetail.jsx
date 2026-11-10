@@ -66,7 +66,9 @@ export default function RecipeDetail() {
           {!mine && <button className={`follow${fol ? ' on' : ''}`} onClick={() => toggleFollow(r.writer, r.writerId)}>{fol ? '팔로잉' : '팔로우'}</button>}
         </div>
         <div className="actions">
-          <button className={fav ? 'on' : ''} onClick={() => toggleFavorite(r.recipeId)}><HeartI filled={fav} />찜하기</button>
+          {mine
+            ? <button onClick={() => nav(`/register?edit=${r.recipeId}`)}><span className="act-emo">✏️</span>수정</button>
+            : <button className={fav ? 'on' : ''} onClick={() => toggleFavorite(r.recipeId)}><HeartI filled={fav} />찜하기</button>}
           <button onClick={share}><ShareI />공유하기</button>
           {mine
             ? <button className="del" onClick={() => setDeleting(true)}><span className="act-emo">🗑️</span>삭제</button>
@@ -87,7 +89,8 @@ export default function RecipeDetail() {
               {list.map((x) => (
                 <div key={x.ingredientId} className="ing">
                   <IngPic name={x.name} emoji={x.emoji} className="e" />
-                  <span className="n">{x.name}{!x.isSeasoning && <span className={`tag ${selected.includes(x.ingredientId) ? 'have' : 'need'}`}>{selected.includes(x.ingredientId) ? '보유' : '부족'}</span>}</span>
+                  <span className="n">{x.name}{!x.isSeasoning && <span className={`tag ${selected.includes(x.ingredientId) ? 'have' : 'need'}`}>{selected.includes(x.ingredientId) ? '보유' : '부족'}</span>}
+                    {!selected.includes(x.ingredientId) && api.ingredient(x.ingredientId).substituteInfo && <small className="subst">대체: {api.ingredient(x.ingredientId).substituteInfo}</small>}</span>
                   <span className="a">{scaled(x.quantity, x.unit, serv, r.servings)}</span>
                 </div>
               ))}
