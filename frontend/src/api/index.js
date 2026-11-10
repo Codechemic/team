@@ -221,6 +221,26 @@ const UserService = {
   },
 };
 
+/* ---------------- FridgeService (내 냉장고 재료, fridge_item) — UC-B01·B02 DB 연동 ---------------- */
+const FridgeService = {
+  async fridgeIds() {
+    const user = await UserService.currentUser();
+    if (!USE_SUPABASE || !user) return null;
+    const rows = must(await sb.from('fridge_item').select('ingredient_id').eq('user_id', user.id).order('saved_at'));
+    return rows.map((r) => r.ingredient_id);
+  },
+  async addFridge(ids) {
+    const user = await UserService.currentUser();
+    if (!USE_SUPABASE || !user || !ids.length) return;
+    must(await sb.from('fridge_item').upsert(ids.map((id) => ({ user_id: user.id, ingredient_id: id })), { onConflict: 'user_id,ingredient_id', ignoreDuplicates: true }));
+  },
+  async removeFridge(ids) {
+    const user = await UserService.currentUser();
+    if (!USE_SUPABASE || !user || !ids.length) return;
+    must(await sb.from('fridge_item').delete().eq('user_id', user.id).in('ingredient_id', ids));
+  },
+};
+
 /* ---------------- PreferenceService (설정 > 내 냉장고) ---------------- */
 const PreferenceService = {
   async fridgeModel() {
@@ -238,6 +258,6 @@ const PreferenceService = {
 };
 
 export const api = {
-  ...IngredientService, ...RecipeService, ...InteractionService, ...ReportService, ...RecentSearchService, ...PreferenceService,
+  ...IngredientService, ...RecipeService, ...InteractionService, ...ReportService, ...RecentSearchService, ...PreferenceService, ...FridgeService,
   user: UserService, usingSupabase: USE_SUPABASE,
 };
