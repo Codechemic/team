@@ -375,3 +375,104 @@ nav.tabs { background: rgba(255, 255, 255, .94); backdrop-filter: blur(14px); -w
 
 /* 로고 (시안 1) */
 .brand-home .logo { width: clamp(108px, 17vh, 150px); height: auto; }
+
+/* ===== 조리 모드 (UC-D03) ===== */
+.cook { display: flex; flex-direction: column; min-height: 100dvh; }
+.cook-top { position: sticky; top: 54px; z-index: 4; padding: 10px 16px 8px; background: rgba(255, 253, 251, .96); border-bottom: 1px solid var(--line); }
+.segbar { display: flex; gap: 3px; }
+.segbar i { flex: 1; height: 6px; border-radius: 99px; background: var(--surface-2); cursor: pointer; }
+.segbar i.done { background: #ffb98a; } .segbar i.now { background: var(--accent); }
+.cook-meta { display: flex; justify-content: space-between; align-items: center; margin-top: 6px; font-size: 12.5px; font-weight: 700; color: var(--muted); }
+.wake.on { color: #2e7d32; } .wake.none, .wake.off { font-weight: 500; }
+.cook-main { padding-bottom: 110px; }
+.cook-card { display: flex; flex-direction: column; gap: 16px; padding: 22px 20px; border-radius: 24px; background: #fff; box-shadow: var(--shadow); animation: cin .25s ease; }
+@keyframes cin { from { opacity: 0; transform: translateX(14px); } }
+.cook-step { align-self: flex-start; padding: 4px 12px; border-radius: 99px; background: var(--accent); color: #fff; font-size: 13px; font-weight: 800; letter-spacing: .04em; }
+.cook-photo { width: 100%; max-height: 260px; object-fit: cover; border-radius: 16px; }
+.cook-text { margin: 0; font-size: 21px; line-height: 1.6; font-weight: 600; letter-spacing: -.01em; word-break: keep-all; }
+.big-timer { display: flex; flex-direction: column; align-items: center; gap: 10px; padding: 16px; border-radius: 18px; background: var(--accent-soft); }
+.big-timer output { font-size: 46px; font-weight: 800; font-variant-numeric: tabular-nums; color: var(--brand); line-height: 1.1; }
+.big-timer.run output { color: var(--accent); }
+.big-timer.end { background: #eaf6ec; } .big-timer.end output { color: #2e7d32; }
+.bt-btns { display: flex; gap: 8px; }
+.bt-btns button { height: 40px; padding: 0 18px; border-radius: 99px; background: var(--accent); color: #fff; font-weight: 800; font-size: 15px; }
+.bt-btns .ghost { background: #fff; color: var(--muted); }
+.other-timers { display: flex; flex-wrap: wrap; gap: 6px; }
+.other-timers button { height: 30px; padding: 0 12px; border-radius: 99px; background: #fff4e6; color: #c25e00; font-weight: 700; font-size: 13px; font-variant-numeric: tabular-nums; }
+.center { text-align: center; }
+.cook-nav { position: fixed; bottom: 0; left: 50%; transform: translateX(-50%); width: 100%; max-width: 440px; display: grid; grid-template-columns: 1fr 2fr; gap: 8px; padding: 10px 16px calc(10px + env(safe-area-inset-bottom, 0px)); background: rgba(255, 253, 251, .96); border-top: 1px solid var(--line); z-index: 10; }
+.preview li.cur .num { background: var(--accent); color: #fff; }
+.preview li { cursor: pointer; }
+.preview .tm { font-style: normal; color: var(--accent); font-weight: 700; font-size: 13px; }
+.pv-body { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 8px; }
+.pv-photo { padding: 0; width: 100%; max-width: 280px; border-radius: 12px; overflow: hidden; }
+.pv-photo img { display: block; width: 100%; aspect-ratio: 4 / 3; object-fit: cover; }
+.scrim.zoom { display: grid; place-items: center; padding: 16px; background: rgba(0, 0, 0, .85); }
+.scrim.zoom img { max-width: 100%; max-height: 85vh; border-radius: 12px; }
+/* 등록: 단계 사진·타이머 */
+.stepedit2 { display: flex; flex-direction: column; gap: 8px; padding: 12px; border-radius: 16px; background: #fff; box-shadow: var(--shadow); }
+.se-top { display: flex; gap: 10px; align-items: flex-start; }
+.se-top textarea { flex: 1; min-height: 72px; padding: 10px 12px; border: 1.5px solid var(--line); border-radius: 12px; resize: vertical; font-size: 16px; }
+.se-top .num { flex: none; width: 28px; height: 28px; display: grid; place-items: center; border-radius: 50%; background: var(--accent); color: #fff; font-weight: 800; font-size: 14px; }
+.se-top .del { flex: none; width: 28px; height: 28px; border-radius: 50%; background: var(--surface-2); color: var(--muted); }
+.se-bottom { display: flex; align-items: center; justify-content: space-between; gap: 8px; padding-left: 38px; }
+.se-add { display: inline-flex; align-items: center; gap: 6px; height: 34px; padding: 0 12px; border-radius: 10px; border: 1.5px dashed #e7c9b2; color: var(--brand); font-size: 13px; font-weight: 700; }
+.se-add svg { width: 16px; height: 16px; }
+.se-thumb { position: relative; display: inline-block; width: 72px; height: 54px; }
+.se-thumb.big { width: 140px; height: 105px; }
+.se-thumb img { width: 100%; height: 100%; object-fit: cover; border-radius: 10px; }
+.se-thumb button { position: absolute; top: -6px; right: -6px; width: 22px; height: 22px; border-radius: 50%; background: #333; color: #fff; font-size: 14px; line-height: 1; }
+.se-timer { display: inline-flex; align-items: center; gap: 4px; font-size: 13px; color: var(--muted); }
+.se-timer input { width: 54px; height: 34px; padding: 0 8px; border: 1.5px solid var(--line); border-radius: 10px; text-align: right; font-size: 16px !important; }
+/* 삭제 */
+.actions .del { color: var(--low); }
+.act-emo { font-size: 18px; line-height: 22px; }
+/* 내 레시피 관리 (UC-E03) */
+.my-sum { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+.my-sum > div { display: flex; flex-direction: column; align-items: center; gap: 2px; padding: 12px 4px; border-radius: 16px; background: #f3efeb; }
+.my-sum b { font-size: 19px; font-variant-numeric: tabular-nums; }
+.my-sum span { font-size: 12px; color: var(--muted); }
+.my-rc { display: flex; align-items: center; gap: 8px; padding: 10px; border-radius: 18px; background: #fff; box-shadow: var(--shadow); }
+.my-rc-main { flex: 1; min-width: 0; display: flex; align-items: center; gap: 12px; text-align: left; }
+.my-rc-pic { width: 64px; height: 64px; flex: none; }
+.my-rc-tx { min-width: 0; display: flex; flex-direction: column; gap: 4px; }
+.my-rc-tx b { font-size: 15.5px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.my-rc-stats { display: flex; gap: 10px; font-size: 12.5px; color: var(--muted); font-variant-numeric: tabular-nums; }
+.my-rc-del { flex: none; height: 30px; padding: 0 12px; border-radius: 99px; background: #ffe5e5; color: #c62828; font-size: 12.5px; font-weight: 700; }
+/* 후기 (UC-F01) */
+.stars { display: inline-flex; gap: 1px; color: #ddd3ca; }
+.stars .on { color: #f5a400; }
+.stars i { font-style: normal; }
+.stars.sm { font-size: 13px; } .stars.md { font-size: 18px; }
+.stars.lg button { font-size: 34px; padding: 0 3px; color: #ddd3ca; line-height: 1; }
+.stars.lg button.on { color: #f5a400; }
+.rv-sum { display: flex; gap: 16px; align-items: center; padding: 14px; border-radius: 16px; background: #f8f5f2; }
+.rv-avg { display: flex; flex-direction: column; align-items: center; gap: 2px; min-width: 84px; }
+.rv-avg b { font-size: 30px; line-height: 1.1; }
+.rv-dist { flex: 1; display: flex; flex-direction: column; gap: 3px; }
+.rv-dist div { display: flex; align-items: center; gap: 6px; font-size: 11.5px; color: var(--muted); }
+.rv-dist i { flex: 1; height: 6px; border-radius: 99px; background: #e9e2db; overflow: hidden; }
+.rv-dist i b { display: block; height: 100%; background: #f5a400; border-radius: 99px; }
+.rv-form { display: flex; flex-direction: column; gap: 10px; padding: 14px; border-radius: 16px; background: #fff8f2; border: 1px solid #ffe0c7; }
+.rv-label { font-weight: 800; font-size: 14.5px; }
+.rv-form textarea, .cm-write textarea { width: 100%; padding: 10px 12px; border: 1.5px solid var(--line); border-radius: 12px; resize: vertical; font-size: 16px; background: #fff; }
+.rv-list, .cm-list { display: flex; flex-direction: column; }
+.rv, .cm { padding: 12px 0; border-bottom: 1px solid var(--line); }
+.rv:last-child, .cm:last-child { border-bottom: 0; }
+.rv-top, .cm-top { display: flex; align-items: center; gap: 8px; }
+.rv-top b, .cm-top b { font-size: 14px; }
+.rv-del { margin-left: auto; font-size: 12.5px; color: var(--muted); }
+.rv p, .cm p { margin: 6px 0 0; font-size: 14px; line-height: 1.55; }
+.rv-photo { margin-top: 8px; padding: 0; width: 120px; height: 90px; border-radius: 10px; overflow: hidden; }
+.rv-photo img { width: 100%; height: 100%; object-fit: cover; }
+/* 질문 댓글 (UC-F02) */
+.cm-write { display: flex; gap: 8px; align-items: flex-end; }
+.cm-write textarea { flex: 1; }
+.cm-write .mini { height: 42px; }
+.cm-write.reply { margin-top: 8px; }
+.cm-badge { padding: 1px 7px; border-radius: 99px; background: var(--accent); color: #fff; font-size: 11px; font-weight: 800; }
+.cm .q { color: var(--accent); font-weight: 800; }
+.cm-ans { margin: 8px 0 0 14px; padding: 10px 12px; border-radius: 12px; background: #fff4ea; }
+.cm-ans .a { color: var(--brand); font-weight: 800; }
+.cm-reply { margin-top: 6px; font-size: 13px; }
+.cm > .muted { display: block; margin-top: 6px; }

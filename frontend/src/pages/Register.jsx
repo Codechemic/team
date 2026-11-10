@@ -8,7 +8,7 @@ import PrimaryButton from '../components/PrimaryButton.jsx';
 import { CamI, CheckI, SearchI } from '../components/Icons.jsx';
 
 const UNITS = ['개', 'g', 'ml', '컵', '공기', '큰술', '장', '대', '모', '마리', '약간'];
-const empty = () => ({ mainPhoto: '', title: '', intro: '', cookingTime: 20, difficulty: '쉬움', servings: 2, ingredients: [], steps: ['', ''] });
+const empty = () => ({ mainPhoto: '', title: '', intro: '', cookingTime: 20, difficulty: '쉬움', servings: 2, ingredients: [], steps: [{ text: '', photo: '' }, { text: '', photo: '' }] });
 
 // 2 레시피 등록: ① 기본 정보 → ② 재료 입력(표준 재료 선택) → ③ 조리 단계 → ④ 완료
 export default function Register() {
@@ -31,7 +31,7 @@ export default function Register() {
     if (step === 1 && !f.title.trim()) return setHint('요리 이름을 입력해 주세요');
     if (step === 2 && !f.ingredients.length) return setHint('재료를 1개 이상 추가해 주세요');
     if (step === 3) {
-      const steps = f.steps.map((s) => s.trim()).filter(Boolean);
+      const steps = f.steps.map((s) => ({ ...s, text: s.text.trim() })).filter((s) => s.text);
       if (!steps.length) return setHint('조리 단계를 1개 이상 적어 주세요');
       setBusy(true);
       let recipeId;
@@ -39,7 +39,7 @@ export default function Register() {
         ({ recipeId } = await api.createRecipe({
         ...f, title: f.title.trim(),
         ingredients: f.ingredients.map(({ ingredientId, quantity, unit }) => ({ ingredientId, quantity: unit === '약간' ? null : quantity, unit })),
-        steps: steps.map((d, i) => ({ stepNumber: i + 1, description: d, timerSeconds: null })),
+        steps: steps.map((s, i) => ({ stepNumber: i + 1, description: s.text, timerSeconds: s.min ? Math.round(s.min * 60) : null, stepPhoto: s.photo || null })),
         }));
       } catch (e) { setBusy(false); return setHint(e.message); }
       setBusy(false);
@@ -53,6 +53,10 @@ export default function Register() {
     setQ('');
   };
   const updIng = (k, key, v) => set('ingredients', f.ingredients.map((x, j) => (j === k ? { ...x, [key]: v } : x)));
+  const stepFile = useRef();
+  const [photoFor, setPhotoFor] = useState(null);
+  const setStep2 = (k, key, v) => set('steps', f.steps.map((x, j) => (j === k ? { ...x, [key]: v } : x)));
+  const onStepPhoto = (e) => { const file = e.target.files[0]; e.target.value = ''; if (!file || photoFor == null) return; const rd = new FileReader(); rd.onload = () => setStep2(photoFor, 'photo', rd.result); rd.readAsDataURL(file); };
   const onPhoto = (e) => { const file = e.target.files[0]; if (!file) return; const rd = new FileReader(); rd.onload = () => set('mainPhoto', rd.result); rd.readAsDataURL(file); };
 
   const progress = <div className="progress">{[1, 2, 3, 4].map((i) => <i key={i} className={i <= step ? 'on' : ''} />)}</div>;
@@ -113,14 +117,23 @@ export default function Register() {
         {step === 3 && (
           <>
             <h2 className="step-title">3. 조리 방법 입력</h2>
+            <input ref={stepFile} type="file" accept="image/*" hidden onChange={onStepPhoto} />
             {f.steps.map((s, k) => (
-              <div key={k} className="stepedit">
-                <span className="num">{k + 1}</span>
-                <textarea value={s} onChange={(e) => set('steps', f.steps.map((x, j) => (j === k ? e.target.value : x)))} placeholder={`${k + 1}단계 설명을 적어 주세요`} aria-label={`${k + 1}단계`} />
-                <button className="del" onClick={() => f.steps.length > 1 && set('steps', f.steps.filter((_, j) => j !== k))} aria-label="삭제">×</button>
+              <div key={k} className="stepedit2">
+                <div className="se-top">
+                  <span className="num">{k + 1}</span>
+                  <textarea value={s.text} onChange={(e) => setStep2(k, 'text', e.target.value)} placeholder={`${k + 1}단계 설명을 적어 주세요`} aria-label={`${k + 1}단계`} />
+                  <button className="del" onClick={() => f.steps.length > 1 && set('steps', f.steps.filter((_, j) => j !== k))} aria-label="삭제">×</button>
+                </div>
+                <div className="se-bottom">
+                  {s.photo ? (
+                    <span className="se-thumb"><img src={s.photo} alt={`${k + 1}단계 사진`} /><button onClick={() => setStep2(k, 'photo', '')} aria-label="사진 삭제">×</button></span>
+                  ) : <button className="se-add" onClick={() => { setPhotoFor(k); stepFile.current.click(); }}><CamI /> 단계 사진 (선택)</button>}
+                  <label className="se-timer">⏱ <input type="number" min="0" max="180" inputMode="numeric" value={s.min || ''} onChange={(e) => setStep2(k, 'min', Math.max(0, +e.target.value || 0))} placeholder="0" aria-label={`${k + 1}단계 타이머(분)`} />분</label>
+                </div>
               </div>
             ))}
-            <PrimaryButton ghost onClick={() => set('steps', [...f.steps, ''])}>+ 단계 추가</PrimaryButton>
+            <PrimaryButton ghost onClick={() => set('steps', [...f.steps, { text: '', photo: '' }])}>+ 단계 추가</PrimaryButton>
           </>
         )}
         {step === 4 ? (

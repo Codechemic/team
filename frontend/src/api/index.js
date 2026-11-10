@@ -16,6 +16,7 @@ function friendly(e) {
 const toCard = (r) => ({
   recipeId: r.recipe_id, title: r.title, emoji: r.emoji, mainPhoto: r.main_photo, cookingTime: r.cooking_time,
   difficulty: r.difficulty, averageRating: Number(r.average_rating), writer: r.profiles?.nickname,
+  views: r.views, saves: r.saves, createdAt: r.created_at,
 });
 
 // 재료 이름·이모지 표시용 캐시 (앱 시작 때 한 번 불러옴)
@@ -104,7 +105,70 @@ const RecipeService = {
     if (!USE_SUPABASE) return mock.createRecipe(body);
     const mainPhoto = body.mainPhoto?.startsWith('data:') ? await RecipeService.uploadPhoto(body.mainPhoto) : body.mainPhoto;
     const recipeId = must(await sb.rpc('create_recipe', { payload: { ...body, mainPhoto } }));
+    // 단계별 사진 (UC-E01): 올린 뒤 해당 단계에 주소 저장
+    const withPhoto = body.steps.filter((s) => s.stepPhoto);
+    for (const s of withPhoto) {
+      const url = s.stepPhoto.startsWith('data:') ? await RecipeService.uploadPhoto(s.stepPhoto) : s.stepPhoto;
+      must(await sb.from('recipe_step').update({ step_photo: url }).eq('recipe_id', recipeId).eq('step_number', s.stepNumber));
+    }
     return { recipeId };
+  },
+  // UC-E02 내 레시피 삭제 (단계·재료·찜·후기·댓글은 DB에서 함께 삭제)
+  async deleteRecipe(recipeId, mainPhoto) {
+    if (!USE_SUPABASE) return mock.deleteRecipe(recipeId);
+    const rows = must(await sb.from('recipe').delete().eq('recipe_id', recipeId).select('recipe_id'));
+    if (!rows.length) throw new Error('내가 등록한 레시피만 삭제할 수 있어요');
+    const m = mainPhoto?.match(/recipe-photos\/(.+)$/);
+    if (m) await sb.storage.from('recipe-photos').remove([decodeURIComponent(m[1])]);
+  },
+};
+
+/* ---------------- ReviewService (UC-F01 평점·후기) ---------------- */
+const ReviewService = {
+  async reviews(recipeId) {
+    if (!USE_SUPABASE) return mock.reviews(recipeId);
+    const rows = must(await sb.from('review').select('review_id, rating, content, photo, created_at, writer_id, profiles(nickname)')
+      .eq('recipe_id', recipeId).order('created_at', { ascending: false }));
+    return rows.map((r) => ({ reviewId: r.review_id, rating: Number(r.rating), content: r.content, photo: r.photo, createdAt: r.created_at, writerId: r.writer_id, writer: r.profiles?.nickname || '알 수 없음' }));
+  },
+  async saveReview(recipeId, { reviewId, rating, content, photo }) {
+    if (!USE_SUPABASE) return mock.saveReview(recipeId, { reviewId, rating, content, photo });
+    const user = await UserService.currentUser();
+    if (!user) throw new Error('로그인이 필요해요');
+    const url = photo?.startsWith('data:') ? await RecipeService.uploadPhoto(photo) : photo || null;
+    const body = { rating, content: content?.trim() || null, photo: url };
+    if (reviewId) must(await sb.from('review').update(body).eq('review_id', reviewId));
+    else must(await sb.from('review').insert({ ...body, recipe_id: recipeId, writer_id: user.id }));
+  },
+  async deleteReview(reviewId) {
+    if (!USE_SUPABASE) return mock.deleteReview(reviewId);
+    must(await sb.from('review').delete().eq('review_id', reviewId));
+  },
+  async recipeRating(recipeId) {
+    if (!USE_SUPABASE) return mock.recipeRating(recipeId);
+    return Number(must(await sb.from('recipe').select('average_rating').eq('recipe_id', recipeId).single()).average_rating);
+  },
+};
+
+/* ---------------- CommentService (UC-F02 질문 댓글 · 업로더 답변) ---------------- */
+const CommentService = {
+  async comments(recipeId) {
+    if (!USE_SUPABASE) return mock.comments(recipeId);
+    const rows = must(await sb.from('comment').select('comment_id, parent_comment_id, content, reg_date, writer_id, profiles(nickname)')
+      .eq('recipe_id', recipeId).order('reg_date'));
+    return rows.map((c) => ({ commentId: c.comment_id, parentId: c.parent_comment_id, content: c.content, createdAt: c.reg_date, writerId: c.writer_id, writer: c.profiles?.nickname || '알 수 없음' }));
+  },
+  async addComment(recipeId, content, parentId = null) {
+    if (!USE_SUPABASE) return mock.addComment(recipeId, content, parentId);
+    const user = await UserService.currentUser();
+    if (!user) throw new Error('로그인이 필요해요');
+    const text = content.trim();
+    if (!text) throw new Error('내용을 입력해 주세요');
+    must(await sb.from('comment').insert({ recipe_id: recipeId, writer_id: user.id, content: text, parent_comment_id: parentId }));
+  },
+  async deleteComment(commentId) {
+    if (!USE_SUPABASE) return mock.deleteComment(commentId);
+    must(await sb.from('comment').delete().eq('comment_id', commentId));
   },
 };
 
@@ -258,6 +322,6 @@ const PreferenceService = {
 };
 
 export const api = {
-  ...IngredientService, ...RecipeService, ...InteractionService, ...ReportService, ...RecentSearchService, ...PreferenceService, ...FridgeService,
+  ...IngredientService, ...RecipeService, ...InteractionService, ...ReportService, ...RecentSearchService, ...PreferenceService, ...FridgeService, ...ReviewService, ...CommentService,
   user: UserService, usingSupabase: USE_SUPABASE,
 };

@@ -4,6 +4,8 @@ import { useApp } from '../store.jsx';
 import { api } from '../api/index.js';
 import Header from '../components/Header.jsx';
 import PrimaryButton from '../components/PrimaryButton.jsx';
+import Reviews from '../components/Reviews.jsx';
+import Comments from '../components/Comments.jsx';
 import { FoodPic, IngPic } from '../components/Pic.jsx';
 import { ClockI, FlagI, HeartI, ShareI } from '../components/Icons.jsx';
 
@@ -26,11 +28,17 @@ export default function RecipeDetail() {
   const [serv, setServ] = useState(2);
   const [reporting, setReporting] = useState(false);
   const [reason, setReason] = useState('부적절한 내용');
+  const [deleting, setDeleting] = useState(false);
+  const [zoom, setZoom] = useState(null);
   useEffect(() => { api.getRecipe(id).then((d) => { setR(d); setServ(d.servings); }).catch((e) => toast(e.message)); }, [id]);
   if (!r) return <><Header title="" /><main className="page"><div className="sk sk-hero" /><div className="sk" style={{ height: 26, width: '55%' }} /><div className="sk" style={{ height: 70 }} /><div className="sk" style={{ height: 180 }} /></main></>;
   const fav = favorites.includes(r.recipeId), fol = following.includes(r.writerId || r.writer);
   const mine = r.writer === '나' || (user && user.id === r.writerId);
   const share = () => navigator.clipboard?.writeText(`${r.title} 레시피 · 냉장고를 부탁해`).then(() => toast('레시피 이름을 복사했어요')).catch(() => toast('복사할 수 없는 환경이에요'));
+  const removeRecipe = async () => {
+    try { await api.deleteRecipe(r.recipeId, r.mainPhoto); toast('레시피를 삭제했어요'); nav('/my', { replace: true }); }
+    catch (e) { toast(e.message); setDeleting(false); }
+  };
   const sendReport = async () => {
     try { await api.report('RECIPE', r.recipeId, reason); toast('신고가 접수됐어요. 관리자가 확인 후 처리해요'); }
     catch (e) { toast(e.message); }
@@ -60,7 +68,9 @@ export default function RecipeDetail() {
         <div className="actions">
           <button className={fav ? 'on' : ''} onClick={() => toggleFavorite(r.recipeId)}><HeartI filled={fav} />찜하기</button>
           <button onClick={share}><ShareI />공유하기</button>
-          <button onClick={() => !needLogin('신고') && setReporting(true)}><FlagI />신고하기</button>
+          {mine
+            ? <button className="del" onClick={() => setDeleting(true)}><span className="act-emo">🗑️</span>삭제</button>
+            : <button onClick={() => !needLogin('신고') && setReporting(true)}><FlagI />신고하기</button>}
         </div>
         <section className="sec">
           <div className="sec-h">
@@ -88,11 +98,29 @@ export default function RecipeDetail() {
         <section className="sec">
           <div className="sec-h"><h2>조리 순서 <span className="count">{r.steps.length}</span></h2></div>
           <ol className="preview">
-            {r.steps.map((s) => <li key={s.stepNumber}><span className="num">{s.stepNumber}</span><p>{s.description}</p></li>)}
+            {r.steps.map((s) => (
+              <li key={s.stepNumber}><span className="num">{s.stepNumber}</span>
+                <div className="pv-body"><p>{s.description}</p>
+                  {s.stepPhoto && <button className="pv-photo" onClick={() => setZoom(s.stepPhoto)}><img src={s.stepPhoto} alt={`${s.stepNumber}단계 사진`} loading="lazy" /></button>}
+                </div>
+              </li>
+            ))}
           </ol>
         </section>
+        <Reviews recipeId={r.recipeId} mineRecipe={mine} onRating={(v) => setR((x) => ({ ...x, averageRating: v }))} />
+        <Comments recipeId={r.recipeId} writerId={r.writerId} writer={r.writer} />
         <div className="sticky-cta"><PrimaryButton onClick={() => nav(`/recipes/${r.recipeId}/cook`)}>요리 시작하기</PrimaryButton></div>
       </main>
+      {zoom && <div className="scrim zoom" onClick={() => setZoom(null)}><img src={zoom} alt="단계 사진 크게 보기" /></div>}
+      {deleting && (
+        <div className="scrim" onClick={(e) => e.target === e.currentTarget && setDeleting(false)}>
+          <div className="sheet" role="dialog" aria-modal="true">
+            <h3>이 레시피를 삭제할까요?</h3>
+            <p className="muted">조리 단계, 재료, 사진, 찜·후기·질문까지 함께 지워지고 되돌릴 수 없어요.</p>
+            <div className="btn-row"><PrimaryButton ghost onClick={() => setDeleting(false)}>취소</PrimaryButton><button className="btn danger-btn" onClick={removeRecipe}>삭제하기</button></div>
+          </div>
+        </div>
+      )}
       {reporting && (
         <div className="scrim" onClick={(e) => e.target === e.currentTarget && setReporting(false)}>
           <div className="sheet" role="dialog" aria-modal="true">

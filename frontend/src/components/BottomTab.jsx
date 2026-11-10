@@ -11,6 +11,7 @@ const TABS = [
 ];
 export default function BottomTab() {
   const { pathname } = useLocation();
+  if (pathname.endsWith('/cook')) return null;   // 조리 모드는 화면 전체 사용
   const active = (t) => t.match.some((m) => (m === '/' ? pathname === '/' : pathname.startsWith(m)));
   return (
     <nav className="tabs" aria-label="메뉴">
