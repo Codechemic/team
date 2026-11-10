@@ -2,10 +2,16 @@ import { useEffect, useState } from 'react';
 import { useApp } from '../store.jsx';
 import { api } from '../api/index.js';
 import { ago, useMeId } from './Reviews.jsx';
+import Modal from './Modal.jsx';
+import PrimaryButton from './PrimaryButton.jsx';
+
+const REASONS = ['광고·홍보', '욕설·비방', '음란·불쾌한 내용', '도배', '기타'];
 
 // UC-F02 질문 댓글: 누구나 질문, 레시피 업로더가 답변
 export default function Comments({ recipeId, writerId, writer }) {
-  const { needLogin, toast } = useApp();
+  const { needLogin, toast, isAdmin } = useApp();
+  const [rep, setRep] = useState(null);
+  const [why, setWhy] = useState(REASONS[0]);
   const meId = useMeId();
   const isUploader = meId && meId === (writerId || (writer === '나' ? 'me' : null));
   const [list, setList] = useState(null);
@@ -28,7 +34,10 @@ export default function Comments({ recipeId, writerId, writer }) {
     <div className="cm-top">
       <b>{c.writer}</b>{(c.writerId === writerId || (writer === '나' && c.writerId === 'me')) && <span className="cm-badge">업로더</span>}
       <span className="muted small">{ago(c.createdAt)}</span>
-      {c.writerId === meId && <button className="link rv-del" onClick={() => remove(c.commentId)}>삭제</button>}
+      {c.isHidden && <span className="cat-tag hid">숨김</span>}
+      {c.writerId === meId || isAdmin
+        ? <button className="link rv-del" onClick={() => remove(c.commentId)}>{c.writerId === meId ? '삭제' : '관리자 삭제'}</button>
+        : <button className="link rv-del" onClick={() => !needLogin('신고') && (setWhy(REASONS[0]), setRep(c))}>신고</button>}
     </div>
   );
   return (
@@ -58,6 +67,15 @@ export default function Comments({ recipeId, writerId, writer }) {
           ))}
         </div>
       ) : <div className="empty">아직 질문이 없어요</div>}
+      {rep && (
+        <Modal onClose={() => setRep(null)}>
+          <h3>댓글 신고</h3>
+          <p className="muted small">“{rep.content.slice(0, 60)}”</p>
+          {REASONS.map((r) => <label key={r} className="radio"><input type="radio" name="cr" checked={why === r} onChange={() => setWhy(r)} />{r}</label>)}
+          <div className="btn-row"><PrimaryButton ghost onClick={() => setRep(null)}>취소</PrimaryButton>
+            <PrimaryButton onClick={async () => { try { await api.report('COMMENT', rep.commentId, why); toast('신고가 접수됐어요. 관리자가 확인할게요'); } catch (e) { toast(e.message); } setRep(null); }}>신고하기</PrimaryButton></div>
+        </Modal>
+      )}
     </section>
   );
 }

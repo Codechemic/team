@@ -16,7 +16,7 @@ function friendly(e) {
 const toCard = (r) => ({
   recipeId: r.recipe_id, title: r.title, emoji: r.emoji, mainPhoto: r.main_photo, cookingTime: r.cooking_time,
   difficulty: r.difficulty, averageRating: Number(r.average_rating), writer: r.profiles?.nickname,
-  views: r.views, saves: r.saves, createdAt: r.created_at,
+  views: r.views, saves: r.saves, createdAt: r.created_at, isHidden: !!r.is_hidden,
 });
 
 // 재료 이름·이모지 표시용 캐시 (앱 시작 때 한 번 불러옴)
@@ -174,9 +174,9 @@ const ReviewService = {
 const CommentService = {
   async comments(recipeId) {
     if (!USE_SUPABASE) return mock.comments(recipeId);
-    const rows = must(await sb.from('comment').select('comment_id, parent_comment_id, content, reg_date, writer_id, profiles(nickname)')
+    const rows = must(await sb.from('comment').select('*, profiles(nickname)')
       .eq('recipe_id', recipeId).order('reg_date'));
-    return rows.map((c) => ({ commentId: c.comment_id, parentId: c.parent_comment_id, content: c.content, createdAt: c.reg_date, writerId: c.writer_id, writer: c.profiles?.nickname || '알 수 없음' }));
+    return rows.map((c) => ({ commentId: c.comment_id, parentId: c.parent_comment_id, content: c.content, createdAt: c.reg_date, writerId: c.writer_id, writer: c.profiles?.nickname || '알 수 없음', isHidden: !!c.is_hidden }));
   },
   async addComment(recipeId, content, parentId = null) {
     if (!USE_SUPABASE) return mock.addComment(recipeId, content, parentId);
@@ -218,7 +218,7 @@ const InteractionService = {
 /* ---------------- ReportService ---------------- */
 const ReportService = {
   async report(targetType, targetId, reason) {
-    if (!USE_SUPABASE) return mock.report();
+    if (!USE_SUPABASE) return mock.report(targetType, targetId, reason);
     const user = await UserService.currentUser();
     if (!user) throw new Error('로그인하면 신고할 수 있어요');
     const { error } = await sb.from('report').insert({ reporter_id: user.id, target_type: targetType, target_id: targetId, reason });
@@ -395,6 +395,62 @@ const AdminService = {
   },
 };
 
+/* ---------------- AdminService 2 (UC-G01 신고·레시피·댓글, 공지, 회원) ---------------- */
+const need07 = (e) => { if (e?.code === 'PGRST202' || e?.code === '42883' || e?.code === '42P01') throw new Error('관리자 기능은 Supabase에 07 SQL을 실행한 뒤 사용할 수 있어요'); if (e) throw new Error(friendly(e)); };
+const rpc07 = async (fn, args) => { const { data, error } = await sb.rpc(fn, args); need07(error); return data; };
+const AdminService2 = {
+  async adminStats() { return USE_SUPABASE ? rpc07('admin_stats') : mock.adminStats(); },
+  async adminReports(status = '대기') { return USE_SUPABASE ? rpc07('admin_reports', { p_status: status }) : mock.adminReports(status); },
+  async adminResolve(targetType, targetId, action, reason) {
+    if (!USE_SUPABASE) return mock.adminResolve(targetType, targetId, action, reason);
+    return rpc07('admin_resolve', { p_target_type: targetType, p_target_id: targetId, p_action: action, p_reason: reason || null });
+  },
+  async adminRecipes(q = '', filter = 'all') {
+    if (!USE_SUPABASE) return mock.adminRecipes(q, filter);
+    let qb = sb.from('recipe').select('recipe_id, title, emoji, main_photo, cooking_time, difficulty, average_rating, views, saves, created_at, is_hidden, writer_id, profiles(nickname)').order('created_at', { ascending: false }).limit(100);
+    if (q.trim()) qb = qb.ilike('title', `%${q.trim()}%`);
+    if (filter === 'hidden') qb = qb.eq('is_hidden', true);
+    const { data, error } = await qb; need07(error);
+    return data.map(toCard);
+  },
+  async adminDeleteComment(id) {
+    if (!USE_SUPABASE) return mock.deleteComment(id);
+    must(await sb.from('comment').delete().eq('comment_id', id));
+  },
+  async adminDeleteReview(id) {
+    if (!USE_SUPABASE) return mock.deleteReview(id);
+    must(await sb.from('review').delete().eq('review_id', id));
+  },
+  // 공지 (UC-N06)
+  async notices() {
+    if (!USE_SUPABASE) return mock.notices();
+    const { data, error } = await sb.from('notice').select('*').order('created_at', { ascending: false }).limit(30); need07(error);
+    return data.map((n) => ({ id: n.notice_id, message: n.message, level: n.level, startsAt: n.starts_at, endsAt: n.ends_at, createdAt: n.created_at }));
+  },
+  async activeNotice() {
+    if (!USE_SUPABASE) return mock.activeNotice();
+    const now = new Date().toISOString();
+    const { data, error } = await sb.from('notice').select('*').lte('starts_at', now).or(`ends_at.is.null,ends_at.gt.${now}`).order('created_at', { ascending: false }).limit(1);
+    if (error || !data?.length) return null;
+    return { message: data[0].message, level: data[0].level, id: data[0].notice_id };
+  },
+  async saveNotice(n) {
+    if (!USE_SUPABASE) return mock.saveNotice(n);
+    const user = await UserService.currentUser();
+    const row = { message: n.message.trim(), level: n.level, starts_at: n.startsAt || new Date().toISOString(), ends_at: n.endsAt || null };
+    if (!row.message) throw new Error('공지 내용을 입력해 주세요');
+    const { error } = n.id ? await sb.from('notice').update(row).eq('notice_id', n.id) : await sb.from('notice').insert({ ...row, created_by: user?.id });
+    need07(error);
+  },
+  async deleteNotice(id) {
+    if (!USE_SUPABASE) return mock.deleteNotice(id);
+    const { error } = await sb.from('notice').delete().eq('notice_id', id); need07(error);
+  },
+  // 회원
+  async adminUsers(q = '') { return USE_SUPABASE ? rpc07('admin_users', { q }) : mock.adminUsers(q); },
+  async adminSetAdmin(userId, on) { return USE_SUPABASE ? rpc07('admin_set_admin', { p_user: userId, p_on: on }) : Promise.reject(new Error('체험 모드에서는 관리자 지정을 할 수 없어요')); },
+};
+
 /* ---------------- PreferenceService (설정 > 내 냉장고) ---------------- */
 const PreferenceService = {
   async fridgeModel() {
@@ -412,6 +468,6 @@ const PreferenceService = {
 };
 
 export const api = {
-  ...IngredientService, ...RecipeService, ...InteractionService, ...ReportService, ...RecentSearchService, ...PreferenceService, ...FridgeService, ...ReviewService, ...CommentService, ...NotificationService, ...AdminService,
+  ...IngredientService, ...RecipeService, ...InteractionService, ...ReportService, ...RecentSearchService, ...PreferenceService, ...FridgeService, ...ReviewService, ...CommentService, ...NotificationService, ...AdminService, ...AdminService2,
   user: UserService, usingSupabase: USE_SUPABASE,
 };

@@ -19,7 +19,7 @@ export const useMeId = () => { const { user } = useApp(); return api.usingSupaba
 
 // UC-F01 평점 및 후기(사진 포함): 작성·수정·삭제, 저장하면 레시피 평균 평점이 다시 계산됨
 export default function Reviews({ recipeId, mineRecipe, onRating }) {
-  const { needLogin, toast } = useApp();
+  const { needLogin, toast, isAdmin } = useApp();
   const meId = useMeId();
   const [list, setList] = useState(null);
   const [form, setForm] = useState(null);       // { reviewId?, rating, content, photo }
@@ -69,7 +69,7 @@ export default function Reviews({ recipeId, mineRecipe, onRating }) {
           {list.map((r) => (
             <div key={r.reviewId} className="rv">
               <div className="rv-top"><b>{r.writer}</b><Stars value={r.rating} size="sm" /><span className="muted small">{ago(r.createdAt)}</span>
-                {r.writerId === meId && <button className="link rv-del" onClick={() => remove(r.reviewId)}>삭제</button>}</div>
+                {(r.writerId === meId || isAdmin) && <button className="link rv-del" onClick={() => (r.writerId === meId ? remove(r.reviewId) : api.adminDeleteReview(r.reviewId).then(() => after('후기를 삭제했어요')).catch((e) => toast(e.message)))}>{r.writerId === meId ? '삭제' : '관리자 삭제'}</button>}</div>
               {r.content && <p>{r.content}</p>}
               {r.photo && <button className="rv-photo" onClick={() => setZoom(r.photo)}><img src={r.photo} alt={`${r.writer}님의 후기 사진`} loading="lazy" /></button>}
             </div>

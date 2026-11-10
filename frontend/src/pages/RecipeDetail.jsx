@@ -24,7 +24,16 @@ export function scaled(q, unit, serv, base) {
 export default function RecipeDetail() {
   const { id } = useParams();
   const nav = useNavigate();
-  const { user, needLogin, selected, favorites, toggleFavorite, following, toggleFollow, toast } = useApp();
+  const { user, needLogin, selected, favorites, toggleFavorite, following, toggleFollow, toast, isAdmin } = useApp();
+  const [adm, setAdm] = useState(null);
+  const adminDo = async (action) => {
+    try {
+      await api.adminResolve('RECIPE', r.recipeId, action, action === 'restore' ? null : '관리자 판단');
+      setAdm(null);
+      if (action === 'delete') { toast('레시피를 삭제했어요'); nav(-1); return; }
+      setR((x) => ({ ...x, isHidden: action === 'hide', hiddenReason: action === 'hide' ? '관리자 판단' : null })); toast(action === 'hide' ? '레시피를 숨겼어요' : '숨김을 해제했어요');
+    } catch (e) { toast(e.message); }
+  };
   const [r, setR] = useState(null);
   const [serv, setServ] = useState(2);
   const [reporting, setReporting] = useState(false);
@@ -49,6 +58,13 @@ export default function RecipeDetail() {
     <>
       <Header title="" right={<button className="iconbtn" style={{ color: fav ? 'var(--heart)' : undefined }} onClick={() => toggleFavorite(r.recipeId)} aria-label="찜하기"><HeartI filled={fav} /></button>} />
       <main className="page detail">
+        {r.isHidden && <div className="hid-banner">🙈 관리자에 의해 숨김 처리된 레시피예요{r.hiddenReason ? ` (사유: ${r.hiddenReason})` : ''}. 작성자와 관리자만 볼 수 있어요.</div>}
+        {isAdmin && !mine && (
+          <div className="adm-bar"><span>🛠️ 관리자</span>
+            {r.isHidden ? <button onClick={() => adminDo('restore')}>숨김 해제</button> : <button onClick={() => setAdm('hide')}>숨기기</button>}
+            <button className="d" onClick={() => setAdm('delete')}>삭제</button>
+          </div>
+        )}
         <FoodPic r={r} size="lg" extras={r.mainPhoto ? [] : r.ingredients.filter((x) => !x.isSeasoning && x.name !== r.title)} />
         <section className="sec title-sec">
           {r.category && <span className="cat">{r.category}</span>}
@@ -121,6 +137,13 @@ export default function RecipeDetail() {
             <h3>이 레시피를 삭제할까요?</h3>
             <p className="muted">조리 단계, 재료, 사진, 찜·후기·질문까지 함께 지워지고 되돌릴 수 없어요.</p>
             <div className="btn-row"><PrimaryButton ghost onClick={() => setDeleting(false)}>취소</PrimaryButton><button className="btn danger-btn" onClick={removeRecipe}>삭제하기</button></div>
+        </Modal>
+      )}
+      {adm && (
+        <Modal onClose={() => setAdm(null)}>
+          <h3>관리자 권한으로 {adm === 'hide' ? '숨길까요?' : '삭제할까요?'}</h3>
+          <p className="muted">{adm === 'hide' ? '다른 사용자에게 보이지 않게 되고 작성자에게 알림이 가요.' : '레시피와 단계·후기·댓글이 모두 지워지고 되돌릴 수 없어요. 작성자에게 알림이 가요.'}</p>
+          <div className="btn-row"><PrimaryButton ghost onClick={() => setAdm(null)}>취소</PrimaryButton><button className={`btn${adm === 'delete' ? ' danger-btn' : ''}`} onClick={() => adminDo(adm)}>{adm === 'hide' ? '숨기기' : '삭제'}</button></div>
         </Modal>
       )}
       {reporting && (

@@ -47,7 +47,7 @@ export default function MyPage() {
           <button className="tile" onClick={() => nav('/settings')}><FridgeI /><b>냉장고 설정</b><span>{myFridge ? `${myFridge.brand} · ${myFridge.size}` : '모델 선택하기'}</span></button>
           <button className="tile" onClick={() => (api.usingSupabase && !user ? nav('/login') : nav('/account'))}><UserI /><b>계정 설정</b><span>닉네임·비밀번호</span></button>
           <button className="tile" onClick={() => nav('/notifications')}><span className="tile-emo">🔔</span><b>알림</b><span>{unread ? `새 알림 ${unread}개` : '새 레시피 소식'}</span></button>
-          {isAdmin && <button className="tile admin" onClick={() => nav('/admin')}><span className="tile-emo">🛠️</span><b>재료 관리</b><span>관리자 전용</span></button>}
+          {isAdmin && <button className="tile admin" onClick={() => nav('/admin')}><span className="tile-emo">🛠️</span><b>관리자 페이지</b><span>신고·레시피·재료·공지</span></button>}
         </div>
         {open === 'mine' && (mine.length ? (
           <div className="sec">

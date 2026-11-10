@@ -53,7 +53,7 @@ function recommendSync(ingredientIds, sort = 'rec') {
 function detail(r) {
   return {
     recipeId: r.id, title: r.title, intro: r.intro, tip: r.tip || null, category: r.category || null, emoji: r.emoji, mainPhoto: r.mainPhoto || null, cookingTime: r.cookingTime,
-    difficulty: r.difficulty, servings: r.servings, views: r.views, saves: r.saves ?? 0, averageRating: avgOf(r), writer: r.writer, writerId: r.writer === '나' ? 'me' : undefined,
+    difficulty: r.difficulty, servings: r.servings, views: r.views, saves: r.saves ?? 0, averageRating: avgOf(r), writer: r.writer, writerId: r.writer === '나' ? 'me' : undefined, isHidden: ls('hidden').includes(r.id), hiddenReason: ls('hidden').includes(r.id) ? '신고 접수로 숨김' : null,
     ingredients: r.ingredients.map((x) => ({ ...x, name: byId[x.ingredientId].name, emoji: byId[x.ingredientId].emoji, isSeasoning: byId[x.ingredientId].isSeasoning })),
     steps: r.steps,
   };
@@ -95,7 +95,62 @@ export const mock = {
     localStorage.setItem('fridge_myRecipes', JSON.stringify([r, ...myRecipes()]));
     return wait({ recipeId: r.id });
   },
-  report: () => wait({ status: '대기' }),
+  // 체험 모드 신고·관리자 (이 기기에만 저장)
+  report: (targetType, targetId, reason) => {
+    const all = ls('reports');
+    if (all.some((x) => x.targetType === targetType && x.targetId === targetId && x.reporterId === 'me')) return Promise.reject(new Error('이미 신고한 게시물이에요'));
+    lsSet('reports', [...all, { reportId: Date.now(), targetType, targetId: Number(targetId), reason, reporterId: 'me', reporter: '나', status: '대기', createdAt: new Date().toISOString() }]);
+    return wait({ status: '대기' });
+  },
+  adminStats: () => {
+    const rs = allRecipes(), hidden = ls('hidden');
+    return wait({ users: 1, newUsers7d: 1, recipes: rs.length, hiddenRecipes: hidden.length, newRecipes7d: myRecipes().length, reviews: ls('reviews').length, comments: ls('comments').length,
+      pendingReports: ls('reports').filter((x) => x.status === '대기').length, ingredients: INGREDIENTS.length,
+      topRecipes: [...rs].sort((a, b) => b.views - a.views).slice(0, 5).map((r) => ({ recipeId: r.id, title: r.title, views: r.views, saves: r.saves ?? 0 })) });
+  },
+  adminReports: (status) => {
+    const groups = {};
+    for (const x of ls('reports').filter((x) => status === '전체' || x.status === status)) {
+      const k = x.targetType + x.targetId; (groups[k] ||= { targetType: x.targetType, targetId: x.targetId, count: 0, reports: [], lastAt: x.createdAt }).reports.push(x);
+      groups[k].count++; if (x.createdAt > groups[k].lastAt) groups[k].lastAt = x.createdAt;
+    }
+    const hidden = ls('hidden');
+    return wait(Object.values(groups).map((g) => {
+      if (g.targetType === 'RECIPE') { const r = allRecipes().find((v) => v.id === g.targetId); g.target = r && { title: r.title, writer: r.writer, isHidden: hidden.includes(r.id), recipeId: r.id, emoji: r.emoji }; }
+      else { const c = ls('comments').find((v) => v.commentId === g.targetId); const r = c && allRecipes().find((v) => v.id === c.recipeId); g.target = c && { content: c.content, writer: c.writer, isHidden: !!c.isHidden, recipeId: c.recipeId, title: r?.title }; }
+      return g;
+    }).sort((a, b) => (a.lastAt < b.lastAt ? 1 : -1)));
+  },
+  adminResolve: (type, id, action) => {
+    if (type === 'RECIPE') {
+      const h = ls('hidden').filter((x) => x !== id);
+      if (action === 'hide') h.push(id);
+      if (action === 'delete') localStorage.setItem('fridge_myRecipes', JSON.stringify(myRecipes().filter((r) => r.id !== id)));
+      lsSet('hidden', h);
+    } else {
+      let cs = ls('comments');
+      if (action === 'delete') cs = cs.filter((c) => c.commentId !== id && c.parentId !== id);
+      else cs = cs.map((c) => (c.commentId === id ? { ...c, isHidden: action === 'hide' } : c));
+      lsSet('comments', cs);
+    }
+    lsSet('reports', ls('reports').map((x) => (x.targetType === type && x.targetId === id && (x.status === '대기' || action === 'restore') ? { ...x, status: action === 'reject' ? '반려' : '처리 완료' } : x)));
+    return wait(null);
+  },
+  adminRecipes: (q, filter) => {
+    const hidden = ls('hidden');
+    return wait(allRecipes().map((r) => ({ ...card(r), views: r.views, saves: r.saves ?? 0, writer: r.writer, isHidden: hidden.includes(r.id) }))
+      .filter((r) => (!q.trim() || r.title.includes(q.trim())) && (filter !== 'hidden' || r.isHidden)));
+  },
+  notices: () => wait(ls('notices')),
+  activeNotice: () => { const now = new Date().toISOString(); const n = ls('notices').find((x) => x.startsAt <= now && (!x.endsAt || x.endsAt > now)); return wait(n || null); },
+  saveNotice: (n) => {
+    if (!n.message.trim()) return Promise.reject(new Error('공지 내용을 입력해 주세요'));
+    const all = ls('notices'), row = { ...n, message: n.message.trim(), startsAt: n.startsAt || new Date().toISOString(), endsAt: n.endsAt || null };
+    lsSet('notices', n.id ? all.map((x) => (x.id === n.id ? { ...x, ...row } : x)) : [{ ...row, id: Date.now(), createdAt: new Date().toISOString() }, ...all]);
+    return wait(null);
+  },
+  deleteNotice: (id) => { lsSet('notices', ls('notices').filter((x) => x.id !== id)); return wait(null); },
+  adminUsers: () => wait([{ id: 'me', nickname: '체험 사용자', email: '(로그인 없음)', createdAt: new Date().toISOString(), recipes: myRecipes().length, reports: ls('reports').length, isAdmin: true }]),
   getRecipeForEdit: (id) => {
     const r = myRecipes().find((x) => String(x.id) === String(id));
     if (!r) return Promise.reject(new Error('내가 등록한 레시피만 수정할 수 있어요'));

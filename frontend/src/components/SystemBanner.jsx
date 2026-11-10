@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { api } from '../api/index.js';
 
 // UC-N06 가용성: ① 점검 사전 공지 (public/notice.json) ② 인터넷 연결 끊김 안내
 // 공지 방법: GitHub에서 frontend/public/notice.json 의 active 를 true 로, message·until 을 바꿔 저장하면 자동 배포 후 모든 사용자에게 표시
@@ -7,9 +8,10 @@ export default function SystemBanner() {
   const [online, setOnline] = useState(navigator.onLine);
   const [hidden, setHidden] = useState(() => { try { return sessionStorage.getItem('notice_hidden') || ''; } catch { return ''; } });
   useEffect(() => {
-    fetch('/notice.json', { cache: 'no-store' }).then((r) => (r.ok ? r.json() : null)).then((n) => {
-      if (n?.active && n.message && (!n.until || new Date(n.until) > new Date())) setNotice(n);
-    }).catch(() => {});
+    // 관리자가 앱에서 올린 공지(DB)를 먼저, 없으면 notice.json
+    api.activeNotice().then((n) => n || fetch('/notice.json', { cache: 'no-store' }).then((r) => (r.ok ? r.json() : null))
+      .then((j) => (j?.active && j.message && (!j.until || new Date(j.until) > new Date()) ? j : null)))
+      .then((n) => n && setNotice(n)).catch(() => {});
     const on = () => setOnline(true), off = () => setOnline(false);
     window.addEventListener('online', on); window.addEventListener('offline', off);
     return () => { window.removeEventListener('online', on); window.removeEventListener('offline', off); };
