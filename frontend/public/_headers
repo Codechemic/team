@@ -1,0 +1,6 @@
+# 새 버전이 바로 보이도록: 페이지(HTML)는 매번 새로 받고, 해시가 붙은 파일만 오래 캐시
+/*
+  Cache-Control: no-cache
+/assets/*
+  ! Cache-Control
+  Cache-Control: public, max-age=31536000, immutable

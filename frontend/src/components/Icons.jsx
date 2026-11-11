@@ -12,3 +12,5 @@ export const CheckI = () => <svg viewBox="0 0 24 24" {...s} strokeWidth="3"><pat
 export const ChevI = () => <svg viewBox="0 0 24 24" {...s}><path d="M9 6l6 6-6 6" /></svg>;
 export const ClockI = () => <svg viewBox="0 0 24 24" width="13" height="13" {...s}><circle cx="12" cy="12" r="9" /><path d="M12 7v5l3 2" /></svg>;
 export const HatI = () => <svg viewBox="0 0 48 48" {...s} strokeWidth="3"><path d="M14 30c-5 0-8-3.6-8-8a8 8 0 0 1 9.5-7.9A10 10 0 0 1 24 9a10 10 0 0 1 8.5 5.1A8 8 0 0 1 42 22c0 4.4-3 8-8 8" /><path d="M14 26v13h20V26M14 34h20" /></svg>;
+export const FridgeI = () => <svg viewBox="0 0 24 24" {...s}><rect x="5" y="2.5" width="14" height="19" rx="3" /><path d="M5 10h14M8.5 5.5v2M8.5 13v3.5" /></svg>;
+export const ClockLineI = () => <svg viewBox="0 0 24 24" {...s}><circle cx="12" cy="12" r="9" /><path d="M12 7v5l3 2" /></svg>;

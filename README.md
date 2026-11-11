@@ -35,3 +35,6 @@ Supabase에 연결하려면 `supabase/README.md` 순서대로 프로젝트를 �
 - 후기 · 댓글 · 알림 화면 (DB 테이블과 권한은 준비됨)
 - 관리자 신고 처리 화면 (DB 권한은 준비됨, 지금은 Supabase 대시보드에서 처리)
 - 최근 검색어 · 내 냉장고는 아직 기기에만 저장 (DB 테이블 준비됨)
+
+## 이미지 출처
+재료·요리 일러스트는 [Microsoft Fluent Emoji](https://github.com/microsoft/fluentui-emoji) 3D 이미지(MIT 라이선스)를 변환해 `frontend/public/img` 에 넣었습니다.
